@@ -2,8 +2,17 @@
 
 #include "misc/fonts/IconsFontAwesome6.h"
 
+#include <iostream>
+
 namespace PlotGUI
 {
+    bool Console::s_logToTerminal = false;
+
+    void Console::EnableLogToTerminal(bool b)
+    {
+        s_logToTerminal = b;
+    }
+
 	void Console::Log(const char* str, ...)
 	{
         va_list args;
@@ -35,7 +44,6 @@ namespace PlotGUI
         va_list args;
         va_start(args, str);
         Instance().AddLogWarning(str, args);
-        Instance().m_itemTypes.push_back(LogType::Warning);
         va_end(args);
 	}
 
@@ -49,7 +57,6 @@ namespace PlotGUI
         va_list args;
         va_start(args, str);
         Instance().AddLogError(str, args);
-        Instance().m_itemTypes.push_back(LogType::Error);
         va_end(args);
 	}
 
@@ -156,6 +163,11 @@ namespace PlotGUI
 		va_end(args);
 		m_items.push_back(Strdup(buf));
         m_itemTypes.push_back(LogType::None);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
 	}
 
 	void Console::AddLogInfo(const char* fmt, ...)
@@ -169,6 +181,11 @@ namespace PlotGUI
         va_end(args);
         m_items.push_back(Strcat("[Info]:    ", buf));
         m_itemTypes.push_back(LogType::Info);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
 	}
 
 	void Console::AddLogWarning(const char* fmt, ...)
@@ -182,6 +199,11 @@ namespace PlotGUI
         va_end(args);
         m_items.push_back(Strcat("[Warning]: ", buf));
         m_itemTypes.push_back(LogType::Warning);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
 	}
 
 	void Console::AddLogError(const char* fmt, ...)
@@ -195,6 +217,11 @@ namespace PlotGUI
         va_end(args);
         m_items.push_back(Strcat("[Error]:   ", buf));
         m_itemTypes.push_back(LogType::Error);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
 	}
 
 	void Console::AddLogCommand(const char* fmt, ...)
@@ -208,6 +235,11 @@ namespace PlotGUI
         va_end(args);
         m_items.push_back(Strdup(buf));
         m_itemTypes.push_back(LogType::Command);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
 	}
 
 	void Console::Draw(const char* title, bool* p_open)
@@ -219,18 +251,86 @@ namespace PlotGUI
         ImGui::SameLine();
 
         // Options menu
-        if (ImGui::BeginPopup("Options", ImGuiWindowFlags_ChildMenu))
+        if (ImGui::BeginPopup("Options"))
         {
             ImGui::Checkbox("Auto-scroll", &m_autoScroll);
+            ImGui::Checkbox("Log to terminal", &s_logToTerminal);
             ImGui::EndPopup();
         }
         if (ImGui::Button(" Options " ICON_FA_CARET_DOWN " "))
             ImGui::OpenPopup("Options");
         ImGui::SameLine();
 
-        // Filter
-        m_filter.Draw("##Filter", 180);
+        // Info/Warning/Error filter
+        const char* filterText = ICON_FA_MAGNIFYING_GLASS;
+        const char* infoButton = ICON_FA_CIRCLE_INFO;
+        const char* warningButton = ICON_FA_CIRCLE_EXCLAMATION;
+        const char* errorButton = ICON_FA_CIRCLE_XMARK;
+
+        float filterWidth = 180.0f;
+        float filterTextWidht = ImGui::CalcTextSize(filterText).x;
+        float infoWidth = ImGui::CalcTextSize(infoButton).x;
+        float warningWidth = ImGui::CalcTextSize(warningButton).x;
+        float errorWidth = ImGui::CalcTextSize(errorButton).x;
+        float totalWidth = filterWidth + filterTextWidht + infoWidth + warningWidth + errorWidth;
+
+        //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.0f, 0.0f });
+        auto posX = (ImGui::GetCursorPosX() + ImGui::GetColumnWidth() - totalWidth
+            - ImGui::GetScrollX() - 2 * 3 * ImGui::GetStyle().ItemSpacing.x);
+        ImGui::SetCursorPosX(posX);
+        //ImGui::PopStyleVar();
+
+        m_filter.Draw(filterText, filterWidth);
+        ImGui::SameLine();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 2.0f, 2.0f });
+
+        bool tmp = m_showInfo;
+        if (m_showInfo)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, { 0.0f, 1.0f, 0.0f, 1.0f });
+        }
+        if (ImGui::Button(infoButton))
+        {
+            m_showInfo = !m_showInfo;
+        }
+        if (tmp)
+        {
+            ImGui::PopStyleColor();
+        }
+        ImGui::SameLine();
+
+        tmp = m_showWarning;
+        if (m_showWarning)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, { 1.0f, 1.0f, 0.0f, 1.0f });
+        }
+        if (ImGui::Button(warningButton))
+        {
+            m_showWarning = !m_showWarning;
+        }
+        if (tmp)
+        {
+            ImGui::PopStyleColor();
+        }
+        ImGui::SameLine();
+
+        tmp = m_showError;
+        if (m_showError)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, { 1.0f, 0.0f, 0.0f, 1.0f });
+        }
+        if (ImGui::Button(errorButton))
+        {
+            m_showError = !m_showError;
+        }
+        if (tmp)
+        {
+            ImGui::PopStyleColor();
+        }
         ImGui::Separator();
+
+        ImGui::PopStyleVar();
 
         // Reserve enough left-over height for 1 separator + 1 input text
         const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -280,17 +380,32 @@ namespace PlotGUI
                 bool has_color = false;
                 if (logType == LogType::Info)
                 {
-                    color = ImVec4(0.4f, 1.0f, 0.4f, 1.0f);
+	                if (!m_showInfo)
+	                {
+		                continue;
+	                }
+
+                    color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
                     has_color = true;
                 }
                 else if (logType == LogType::Warning)
                 {
-                    color = ImVec4(1.0f, 1.0f, 0.4f, 1.0f);
+                    if (!m_showWarning)
+                    {
+                        continue;
+                    }
+
+                    color = ImVec4(0.8f, 0.8f, 0.0f, 1.0f);
                     has_color = true;
                 }
                 else if (logType == LogType::Error)
                 {
-	                color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
+                    if (!m_showError)
+                    {
+                        continue;
+                    }
+
+	                color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
                 	has_color = true;
                 }
                 else if (logType == LogType::Command)

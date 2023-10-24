@@ -151,6 +151,11 @@ namespace PlotGUI
             // console.AddLog("hello");
             // console.AddLog("what");
 
+            Console::Log("Normal Log");
+            Console::LogInfo("Info Log");
+            Console::LogWarning("Warning Log");
+            Console::LogError("Error Log");
+
             Console::Instance().Draw("Title", &open);
         }
 

@@ -19,6 +19,7 @@ namespace PlotGUI
 	    };
 
     public:
+        static void EnableLogToTerminal(bool b = true);
         static void Log(const char* str, ...) IM_FMTARGS(2);
         static void Log(const std::string& str);
         static void LogInfo(const char* str, ...) IM_FMTARGS(2);
@@ -67,5 +68,12 @@ namespace PlotGUI
         ImGuiTextFilter       m_filter;
         bool                  m_autoScroll;
         bool                  m_scrollToBottom;
+
+        bool                  m_showInfo = true;
+        bool                  m_showWarning = true;
+        bool                  m_showError = true;
+
+    private:
+        static bool           s_logToTerminal;
     };
 }
