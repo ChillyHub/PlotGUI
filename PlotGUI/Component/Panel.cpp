@@ -149,37 +149,8 @@ namespace PlotGUI
                         s_CurrentProject = name;
 
                         auto proj = ProjectsManager::Instance().GetProject(s_CurrentProject);
-                        //const auto& metas = Registry::Instance().Find(s_CurrentProject)->GetFieldMetas();
-                        //for (auto& meta : metas)
-                        //{
-                        //    if (meta.Attribute() == "int")
-                        //    {
-                        //        //void* p = ProjectsManager::Instance().GetProject(s_CurrentProject).get();
-                        //        //void* c = (Script*)Registry::Instance().Find(s_CurrentProject)->CastClass(p);
-                        //        //ImGui::Text("%s: %d", meta.Name(), meta.Get<int>(Registry::Instance().Find(s_CurrentProject)->CastClass(proj)));
-                        //        ImGui::Text("%s: %d", meta.Name(), std::any_cast<int>(meta.GetFunc()(proj)));
-                        //    }
-                        //}
 
                         proj->OnInspector();
-
-                        //const auto* s = Registry::Instance().Find("StartScript")->CreateClass();
-                        //const auto& metas = Registry::Instance().Find("StartScript")->GetFieldMetas();
-                        //for (auto& meta : metas)
-                        //{
-	                    //    if (meta.Attribute() == "int")
-	                    //    {
-                        //        ImGui::Text("%s: %d", meta.Name().c_str(), meta.Get<int>(s));
-	                    //    }
-                        //    else if (meta.Attribute() == "float")
-                        //    {
-                        //        ImGui::Text("%s: %d", meta.Name().c_str(), meta.Get<float>(s));
-                        //    }
-                        //    else if (meta.Attribute() == "string")
-                        //    {
-                        //        ImGui::Text("%s: %s", meta.Name().c_str(), meta.Get<std::string>(s).c_str());
-                        //    }
-                        //}
 
                         break;
 			        }

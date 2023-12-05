@@ -170,6 +170,21 @@ namespace PlotGUI
         }
 	}
 
+	void Console::AddLog(const char* fmt, va_list args)
+	{
+        // FIXME-OPT
+        char buf[1024];
+        vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
+        buf[IM_ARRAYSIZE(buf) - 1] = 0;
+        m_items.push_back(Strdup(buf));
+        m_itemTypes.push_back(LogType::None);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
+	}
+
 	void Console::AddLogInfo(const char* fmt, ...)
 	{
         // FIXME-OPT
@@ -179,6 +194,21 @@ namespace PlotGUI
         vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
         buf[IM_ARRAYSIZE(buf) - 1] = 0;
         va_end(args);
+        m_items.push_back(Strcat("[Info]:    ", buf));
+        m_itemTypes.push_back(LogType::Info);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
+	}
+
+	void Console::AddLogInfo(const char* fmt, va_list args)
+	{
+        // FIXME-OPT
+        char buf[1024];
+        vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
+        buf[IM_ARRAYSIZE(buf) - 1] = 0;
         m_items.push_back(Strcat("[Info]:    ", buf));
         m_itemTypes.push_back(LogType::Info);
 
@@ -206,6 +236,21 @@ namespace PlotGUI
         }
 	}
 
+	void Console::AddLogWarning(const char* fmt, va_list args)
+	{
+        // FIXME-OPT
+        char buf[1024];
+        vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
+        buf[IM_ARRAYSIZE(buf) - 1] = 0;
+        m_items.push_back(Strcat("[Warning]: ", buf));
+        m_itemTypes.push_back(LogType::Warning);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
+	}
+
 	void Console::AddLogError(const char* fmt, ...)
 	{
         // FIXME-OPT
@@ -224,6 +269,21 @@ namespace PlotGUI
         }
 	}
 
+	void Console::AddLogError(const char* fmt, va_list args)
+	{
+        // FIXME-OPT
+        char buf[1024];
+        vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
+        buf[IM_ARRAYSIZE(buf) - 1] = 0;
+        m_items.push_back(Strcat("[Error]:   ", buf));
+        m_itemTypes.push_back(LogType::Error);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
+	}
+
 	void Console::AddLogCommand(const char* fmt, ...)
 	{
         // FIXME-OPT
@@ -233,6 +293,21 @@ namespace PlotGUI
         vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
         buf[IM_ARRAYSIZE(buf) - 1] = 0;
         va_end(args);
+        m_items.push_back(Strdup(buf));
+        m_itemTypes.push_back(LogType::Command);
+
+        if (s_logToTerminal)
+        {
+            std::cout << m_items.back() << std::endl;
+        }
+	}
+
+	void Console::AddLogCommand(const char* fmt, va_list args)
+	{
+        // FIXME-OPT
+        char buf[1024];
+        vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
+        buf[IM_ARRAYSIZE(buf) - 1] = 0;
         m_items.push_back(Strdup(buf));
         m_itemTypes.push_back(LogType::Command);
 

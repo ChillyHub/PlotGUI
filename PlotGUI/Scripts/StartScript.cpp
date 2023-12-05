@@ -40,7 +40,7 @@ public:
 
 		y *= floatNum;
 
-		Plot::Plot1("Start", x.data(), y.data(), 4, "X", desc);
+		Plot::Plot1("Start", "", "", x.data(), y.data(), 4, "X", desc);
 	}
 
 public:

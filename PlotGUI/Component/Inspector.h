@@ -96,7 +96,9 @@ namespace PlotGUI
 			ImGui::Text(fieldName.c_str());
 			ImGui::NextColumn();
 
+			ImGui::PushItemWidth(-1.0f);
 			func();
+			ImGui::PopItemWidth();
 
 			ImGui::Columns(1);
 

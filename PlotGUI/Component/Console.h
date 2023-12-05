@@ -50,10 +50,15 @@ namespace PlotGUI
     private:
         void ClearLog();
         void AddLog(const char* fmt, ...) IM_FMTARGS(2);
+        void AddLog(const char* fmt, va_list args);
         void AddLogInfo(const char* fmt, ...) IM_FMTARGS(2);
+        void AddLogInfo(const char* fmt, va_list va);
         void AddLogWarning(const char* fmt, ...) IM_FMTARGS(2);
+        void AddLogWarning(const char* fmt, va_list va);
         void AddLogError(const char* fmt, ...) IM_FMTARGS(2);
+        void AddLogError(const char* fmt, va_list va);
         void AddLogCommand(const char* fmt, ...) IM_FMTARGS(2);
+        void AddLogCommand(const char* fmt, va_list va);
         void ExecCommand(const char* command_line);
 
         int TextEditCallback(ImGuiInputTextCallbackData* data);

@@ -1,6 +1,7 @@
 #include "ProjectsManager.h"
 
 #include "Component/Console.h"
+#include "Component/Plot.h"
 
 #include "Reflection/Include/Reflect.h"
 
@@ -50,6 +51,7 @@ namespace PlotGUI
 		if (m_ProjectStates.find(projectName) != m_ProjectStates.end())
 		{
 			m_ProjectStates[projectName].isActive = true;
+			Plot::Init();
 		}
 	}
 
