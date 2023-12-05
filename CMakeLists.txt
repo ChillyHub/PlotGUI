@@ -58,18 +58,15 @@ if(WIN32)
     target_include_directories(Math PUBLIC ${PROJECT_SOURCE_DIR}/Math)
     set_target_properties(Math PROPERTIES FOLDER "Math")
 
-    add_library(Scripts STATIC ${SCRIPTS_FILE})
-    target_include_directories(Scripts PUBLIC ${PROJECT_SOURCE_DIR}/Scripts ${PROJECT_SOURCE_DIR}/Math ${PROJECT_SOURCE_DIR}/PlotGUI)
-    set_target_properties(Scripts PROPERTIES FOLDER "Scripts")
-
     add_executable(PlotGUI ${PLOTGUI_FILE})
-    target_link_libraries(PlotGUI PUBLIC d3d11 d3dcompiler dxgi Imgui Implot Math Scripts)
+    target_link_libraries(PlotGUI PUBLIC d3d11 d3dcompiler dxgi Imgui Implot Math)
     target_include_directories(PlotGUI PUBLIC
         ${PROJECT_SOURCE_DIR}/ThirdPartys/Imgui  
         ${PROJECT_SOURCE_DIR}/ThirdPartys/Implot
         ${PROJECT_SOURCE_DIR}/Math 
         ${PROJECT_SOURCE_DIR}/Scripts
-        ${PROJECT_SOURCE_DIR}/PlotGUI)
+        ${PROJECT_SOURCE_DIR}/PlotGUI
+	${PROJECT_SOURCE_DIR})
     set_target_properties(PlotGUI PROPERTIES FOLDER "PlotGUI")
 
     # VS startup project

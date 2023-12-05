@@ -1,16 +1,25 @@
 #include "Panel.h"
 #include "Console.h"
 
+#include "Core/ProjectsManager.h"
+
 #include <iostream>
 #include <filesystem>
 
-#include "implot.h"
+#include "Component/Plot.h"
+#include "Reflection/Include/Reflect.h"
 
 #include "misc/fonts/IconsFontAwesome6.h"
 #include "misc/fonts/IconsFontAwesome6Brands.h"
 
+class StartScript;
+
 namespace PlotGUI
 {
+    int Panel::s_CurrentPage = 1;
+    bool Panel::s_ShowEditor = false;
+    std::string Panel::s_CurrentProject = "StartScript";
+
 	void Panel::Init()
 	{
 		// Setup Dear ImGui context
@@ -62,6 +71,10 @@ namespace PlotGUI
         icons_config.PixelSnapH = true;
         icons_config.GlyphMinAdvanceX = fontsize;
         io.Fonts->AddFontFromFileTTF(PROJET_DIR "ThirdPartys/Imgui/misc/fonts/" FONT_ICON_FILE_NAME_FAS, fontsize, &icons_config, S_A6_Icon_Range);
+
+        // Console
+        io.Fonts->AddFontFromFileTTF(PROJET_DIR "ThirdPartys/Imgui/misc/fonts/consola.ttf",
+            fontsize * 0.9f, NULL);
 	}
 
 	void Panel::Destory()
@@ -89,41 +102,35 @@ namespace PlotGUI
 	{
         if (ImGui::Begin(" " ICON_FA_DIAGRAM_PROJECT "  Plot "))
         {
-            const float tt[3] = { 2.0f, 2.0f, 1.0f };
+            Plot::Reset();
 
-            if (ImPlot::BeginPlot("Plot", ImVec2(-1, -1)))
+            if (ImGui::Button(" " ICON_FA_LEFT_LONG " "))
             {
-                ImPlot::PlotBars("My Bar Plot", tt, 3);
-                ImPlot::PlotLine("My Line Plot", tt, tt, 3);
-                
-            	ImPlot::EndPlot();
-            }
+                Plot::CurrPages--;
 
-            //ImGuiTableFlags flags = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV |
-            //    ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable;
-            //
-            //if (ImGui::BeginTable("Hello", 3, flags, ImVec2(0, 0)))
-            //{
-            //    ImGui::TableSetupColumn("A");
-            //    ImGui::TableSetupColumn("B");
-            //    ImGui::TableSetupColumn("C");
-            //
-            //    for (int i = 0; i < 3; ++i)
-            //    {
-            //        ImGui::TableNextRow();
-            //
-            //        ImGui::TableSetColumnIndex(0);
-            //        ImGui::Text("n: 0");
-            //
-            //        ImGui::TableSetColumnIndex(1);
-            //        ImGui::Text("n: 1");
-            //
-            //        ImGui::TableSetColumnIndex(2);
-            //        ImGui::Text("n: 2");
-            //    }
-            //
-            //    ImGui::EndTable();
-            //}
+                if (Plot::CurrPages < 1 && Plot::TotalPages > 0)
+                {
+                    Plot::CurrPages = 1;
+                    Console::LogInfo("The first plot");
+                }
+            }
+            ImGui::SameLine();
+
+            if (ImGui::Button(" " ICON_FA_RIGHT_LONG " "))
+            {
+                Plot::CurrPages++;
+
+                if (Plot::CurrPages > Plot::TotalPages && Plot::TotalPages > 0)
+                {
+                    Plot::CurrPages = Plot::TotalPages;
+                    Console::LogInfo("The last plot");
+                }
+            }
+            ImGui::SameLine();
+
+            ImGui::Text(" Page: %d", Plot::CurrPages);
+
+            ProjectsManager::Instance().OnPlotProjects();
         }
 
         ImGui::End();
@@ -133,8 +140,57 @@ namespace PlotGUI
 	{
         if (ImGui::Begin(" " ICON_FA_INFO "  Inspector "))
         {
-            IconsFontAwesome6::ImGuiDrawAllIcons();
-            // IconsFontAwesome6Brands::ImGuiDrawAllIcons();
+	        try
+	        {
+		        for (const auto& [name, state] : ProjectsManager::Instance().GetProjectStates())
+		        {
+			        if (state.isActive)
+			        {
+                        s_CurrentProject = name;
+
+                        auto proj = ProjectsManager::Instance().GetProject(s_CurrentProject);
+                        //const auto& metas = Registry::Instance().Find(s_CurrentProject)->GetFieldMetas();
+                        //for (auto& meta : metas)
+                        //{
+                        //    if (meta.Attribute() == "int")
+                        //    {
+                        //        //void* p = ProjectsManager::Instance().GetProject(s_CurrentProject).get();
+                        //        //void* c = (Script*)Registry::Instance().Find(s_CurrentProject)->CastClass(p);
+                        //        //ImGui::Text("%s: %d", meta.Name(), meta.Get<int>(Registry::Instance().Find(s_CurrentProject)->CastClass(proj)));
+                        //        ImGui::Text("%s: %d", meta.Name(), std::any_cast<int>(meta.GetFunc()(proj)));
+                        //    }
+                        //}
+
+                        proj->OnInspector();
+
+                        //const auto* s = Registry::Instance().Find("StartScript")->CreateClass();
+                        //const auto& metas = Registry::Instance().Find("StartScript")->GetFieldMetas();
+                        //for (auto& meta : metas)
+                        //{
+	                    //    if (meta.Attribute() == "int")
+	                    //    {
+                        //        ImGui::Text("%s: %d", meta.Name().c_str(), meta.Get<int>(s));
+	                    //    }
+                        //    else if (meta.Attribute() == "float")
+                        //    {
+                        //        ImGui::Text("%s: %d", meta.Name().c_str(), meta.Get<float>(s));
+                        //    }
+                        //    else if (meta.Attribute() == "string")
+                        //    {
+                        //        ImGui::Text("%s: %s", meta.Name().c_str(), meta.Get<std::string>(s).c_str());
+                        //    }
+                        //}
+
+                        break;
+			        }
+                    s_CurrentProject = std::string();
+		        }
+	        }
+	        catch (const std::exception& e)
+	        {
+                ProjectsManager::Instance().DisableProject(s_CurrentProject);
+                Console::LogError(e.what());
+	        }
         }
 
         ImGui::End();
@@ -146,20 +202,18 @@ namespace PlotGUI
         {
             bool open = true;
 
-            // console.AddLog("hello");
-            // console.AddLog("hello");
-            // console.AddLog("hello");
-            // console.AddLog("what");
-
-            Console::Log("Normal Log");
-            Console::LogInfo("Info Log");
-            Console::LogWarning("Warning Log");
-            Console::LogError("Error Log");
-
             Console::Instance().Draw("Title", &open);
         }
 
         ImGui::End();
+	}
+
+	void Panel::DrawEditorPanel()
+	{
+		if (s_ShowEditor)
+		{
+            ImGui::ShowStyleEditor();
+		}
 	}
 
 	void Panel::SetLightStyle()
@@ -418,32 +472,18 @@ namespace PlotGUI
 
         if (ImGui::BeginMenuBar())
         {
-            if (ImGui::BeginMenu("File"))
+            if (ImGui::BeginMenu("Projects"))
             {
-                if (ImGui::MenuItem("New", "Ctrl N"))
-                {
-                    //NewScene();
-                }
-                if (ImGui::MenuItem("Open...", "Ctrl O"))
-                {
-                    //OpenScene();
-                }
-                ImGui::Separator();
+	            for (auto& [name, state] : ProjectsManager::Instance().GetProjectStates())
+	            {
+		            if (ImGui::MenuItem(name.c_str()))
+		            {
+                        ProjectsManager::Instance().DisableProject(s_CurrentProject);
+                        ProjectsManager::Instance().ActiveProject(name);
 
-                if (ImGui::MenuItem("Save", "Ctrl S"))
-                {
-                    //SaveScene();
-                }
-                if (ImGui::MenuItem("Save As...", "Shift Ctrl S"))
-                {
-                    //SaveSceneAs();
-                }
-                ImGui::Separator();
-
-                if (ImGui::MenuItem("Quit", "Ctrl Q"))
-                {
-                    //Application::Get().Close();
-                }
+                        s_CurrentProject = name;
+		            }
+	            }
 
                 ImGui::EndMenu();
             }
@@ -456,6 +496,10 @@ namespace PlotGUI
                 if (ImGui::MenuItem("Light Style"))
                 {
                     SetLightStyle();
+                }
+                if (ImGui::MenuItem("Custom Style"))
+                {
+                    s_ShowEditor = !s_ShowEditor;
                 }
 
                 ImGui::EndMenu();
@@ -471,7 +515,7 @@ namespace PlotGUI
             }
             if (ImGui::BeginMenu("Help"))
             {
-                if (ImGui::MenuItem("About Lumi"))
+                if (ImGui::MenuItem("About PlotGUI"))
                 {
 
                 }

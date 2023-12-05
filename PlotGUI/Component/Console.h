@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Utils/Utils.h"
+#include "PlotGUI/Utils/Utils.h"
 
-#include "imgui.h"
+#include "ThirdPartys/Imgui/imgui.h"
 
 namespace PlotGUI
 {

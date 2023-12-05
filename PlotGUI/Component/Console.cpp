@@ -417,9 +417,13 @@ namespace PlotGUI
                 if (!m_filter.PassFilter(item))
                     continue;
 
+                auto font = ImGui::GetIO().Fonts->Fonts[1];
+
                 if (has_color)
                     ImGui::PushStyleColor(ImGuiCol_Text, color);
+                ImGui::PushFont(font);
                 ImGui::TextUnformatted(item);
+                ImGui::PopFont();
                 if (has_color)
                     ImGui::PopStyleColor();
             }

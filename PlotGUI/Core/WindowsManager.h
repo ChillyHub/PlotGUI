@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Utils/Singleton.h"
 #include "GuiWindow.h"
 

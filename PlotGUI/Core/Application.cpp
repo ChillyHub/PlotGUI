@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include "WindowsManager.h"
+#include "ProjectsManager.h"
 
 #include "imgui.h"
 
@@ -20,6 +21,8 @@ namespace PlotGUI
 
 	void Application::Run()
 	{
+		ProjectsManager::Instance().ActiveProject("StartScript");
+
 		bool shouldClose = false;
 		while (!shouldClose)
 		{
@@ -33,12 +36,15 @@ namespace PlotGUI
 			m_MainWindow->Resize();
 			m_MainWindow->StartFrame();
 
+			ProjectsManager::Instance().UpdateProjects();
+
 			Panel::UpdateFrame();
 
 			// Example
 			Panel::DrawPlotPanel();
 			Panel::DrawInspectorPanel();
 			Panel::DrawConsolePanel();
+			Panel::DrawEditorPanel();
 
 			// Present
 			m_MainWindow->Present();
