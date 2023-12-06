@@ -19,7 +19,7 @@ namespace PlotGUI::Detail
 
 	public:
 		template <typename Class, typename Field>
-		RegisterHelper& RegisterField(const std::string& fieldName, Field Class::* field, const std::string& attribute = std::string());
+		RegisterHelper& RegisterField(const std::string& fieldName, Field Class::* field, const std::string& typeName, const std::string& attribute = std::string());
 
 		template <typename Func>
 		RegisterHelper& RegisterFunc(const std::string& funcName, Func func, const std::string& attribute = std::string());
@@ -29,10 +29,11 @@ namespace PlotGUI::Detail
 	};
 
 	template <typename Class, typename Field>
-	RegisterHelper& RegisterHelper::RegisterField(const std::string& fieldName, Field Class::* field, const std::string& attribute)
+	RegisterHelper& RegisterHelper::RegisterField(const std::string& fieldName, Field Class::* field, const std::string& typeName, const std::string& attribute)
 	{
 		FieldMeta fm(field);
 		fm.mName = fieldName;
+		fm.mTypeName = typeName;
 		fm.mAttribute = attribute;
 		mClassMeta->mFieldMetas.push_back(std::move(fm));
 		return *this;

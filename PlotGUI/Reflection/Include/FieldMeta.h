@@ -24,6 +24,7 @@ namespace PlotGUI
 
 	public:
 		[[nodiscard]] const std::string& Name() const;
+		[[nodiscard]] const std::string& TypeName() const;
 		[[nodiscard]] const std::type_index& Type() const;
 
 		template <typename Field, typename Class>
@@ -41,6 +42,7 @@ namespace PlotGUI
 
 	private:
 		std::string mName;
+		std::string mTypeName;
 		std::type_index mType;
 		std::function<std::any(std::any)> mGetFunc;
 		std::function<void(std::any, std::any)> mSetFunc;
@@ -71,6 +73,11 @@ namespace PlotGUI
 	inline const std::string& FieldMeta::Name() const
 	{
 		return mName;
+	}
+
+	inline const std::string& FieldMeta::TypeName() const
+	{
+		return mTypeName;
 	}
 
 	inline const std::type_index& FieldMeta::Type() const
