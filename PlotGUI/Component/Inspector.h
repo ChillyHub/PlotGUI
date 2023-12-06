@@ -59,7 +59,7 @@ namespace PlotGUI
 					auto offset = token.find("Range");
 					if (offset != std::string::npos)
 					{
-						std::string s = token.substr(offset + 5, token.size() - offset - 6);
+						std::string s = token.substr(offset + 6, token.size() - offset - 7);
 
 						const auto of = s.find(',');
 						int min = std::stoi(s.substr(0, of));

@@ -2,6 +2,8 @@
 
 #include "Vec.h"
 
+#include <string>
+
 namespace Math
 {
 	/////////////////////////////////////////////////////
@@ -1130,6 +1132,7 @@ namespace Math
 
 	template <typename T>
 	inline constexpr Vec<Type::Dynamic, T>::Vec(size_t size, T n)
+		: len(size)
 	{
 		e = new T[size];
 		for (size_t i = 0; i < size; ++i)
@@ -1703,5 +1706,20 @@ namespace Math
 		}
 		os << " ]";
 		return os;
+	}
+
+	template <typename T>
+	inline std::string& operator<<(std::string& s, const Vec<Type::Dynamic, T>& rhs)
+	{
+		s += "[ ";
+		for (size_t i = 0; i < rhs.length(); ++i)
+		{
+			T num = OUTNUM(rhs[i]);
+			s += std::to_string(num).substr(0, std::to_string(num).find(".", 0) + 7);
+			if (i < rhs.length() - 1)
+				s += ", ";
+		}
+		s += " ]";
+		return s;
 	}
 } // namespace Math
