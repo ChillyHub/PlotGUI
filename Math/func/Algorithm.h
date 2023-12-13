@@ -147,6 +147,12 @@ namespace Math
 	template <typename T>
 	Mat<Type::Dynamic, Type::Dynamic, T> Inverse(const Mat<Type::Dynamic, Type::Dynamic, T>& a);
 
+	template <size_t N, typename T>
+	Mat<N, N, T> Diagonal(const Mat<N, N, T>& a);
+
+	template <typename T>
+	Mat<Type::Dynamic, Type::Dynamic, T> Diagonal(const Mat<Type::Dynamic, Type::Dynamic, T>& a);
+
 	// correct
 	template <size_t M, size_t N, typename T>
 	bool IsSquareMat(const Mat<M, N, T>& A);

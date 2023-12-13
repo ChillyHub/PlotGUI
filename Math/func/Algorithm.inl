@@ -961,6 +961,37 @@ namespace Math
 		return IU * IL;
 	}
 
+	template <size_t N, typename T>
+	inline Mat<N, N, T> Diagonal(const Mat<N, N, T>& a)
+	{
+		Mat<N, N, T> D;
+
+		for (size_t i = 0; i < N; i++)
+		{
+			D[i][i] = a[i][i];
+		}
+
+		return D;
+	}
+
+	template <typename T>
+	inline Mat<Type::Dynamic, Type::Dynamic, T> Diagonal(const Mat<Type::Dynamic, Type::Dynamic, T>& a)
+	{
+		const size_t N = a.col_len();
+
+		if (!IsSquareMat(a))
+			throw std::runtime_error(S("ERROR: [") + _FUN_NAME_ + "] Matrix A is not a square matrix");
+
+		Mat<Type::Dynamic, Type::Dynamic, T> D(T(0), N, N);
+
+		for (size_t i = 0; i < N; i++)
+		{
+			D[i][i] = a[i][i];
+		}
+
+		return D;
+	}
+
 	// correct
 	template <size_t M, size_t N, typename T>
 	inline bool IsSquareMat(const Mat<M, N, T>& A)
