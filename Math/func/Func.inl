@@ -66,6 +66,30 @@ namespace Math
 	}
 
 	template <size_t N, typename T>
+	inline T Min(const Vec<N, T>& a)
+	{
+		T res = a[0];
+		for (size_t i = 1; i < N; ++i)
+		{
+			res = std::min(res, a[i]);
+		}
+
+		return res;
+	}
+
+	template <size_t N, typename T>
+	inline T Max(const Vec<N, T>& a)
+	{
+		T res = a[0];
+		for (size_t i = 1; i < N; ++i)
+		{
+			res = std::max(res, a[i]);
+		}
+
+		return res;
+	}
+
+	template <size_t N, typename T>
 	inline Vec<N, T> Min(const Vec<N, T>& a, const Vec<N, T>& b)
 	{
 		Vec<N, T> res;
@@ -240,6 +264,36 @@ namespace Math
 		{
 			res[i] = std::abs(a[i]);
 		}
+		return res;
+	}
+
+	template <typename T>
+	inline T Min(const Vec<Type::Dynamic, T>& a)
+	{
+		if (!a.length())
+			throw std::runtime_error(S("ERROR: [") + __func__ + "] Vector is empty");
+
+		T res = a[0];
+		for (size_t i = 1; i < a.length(); ++i)
+		{
+			res = std::min(res, a[i]);
+		}
+
+		return res;
+	}
+
+	template <typename T>
+	inline T Max(const Vec<Type::Dynamic, T>& a)
+	{
+		if (!a.length())
+			throw std::runtime_error(S("ERROR: [") + __func__ + "] Vector is empty");
+
+		T res = a[0];
+		for (size_t i = 1; i < a.length(); ++i)
+		{
+			res = std::max(res, a[i]);
+		}
+
 		return res;
 	}
 
@@ -419,6 +473,36 @@ namespace Math
 			for (size_t j = 0; j < N; ++j)
 				res[i][j] = a[j][i];
 		return res;
+	}
+
+	template <size_t M, size_t N, typename T>
+	T Norm(const Mat<M, N, T>& a)
+	{
+		T res = T(0);
+		for (int j = 0; j < N; ++j)
+		{
+			for (int i = 0; i < M; ++i)
+			{
+				res += Pow(a[j][i], 2.0);
+			}
+		}
+
+		return Sqrt(res);
+	}
+
+	template <typename T>
+	T Norm(const Mat<Type::Dynamic, Type::Dynamic, T>& a)
+	{
+		T res = T(0);
+		for (int j = 0; j < a.row_len(); ++j)
+		{
+			for (int i = 0; i < a.col_len(); ++i)
+			{
+				res += Pow(a[j][i], 2.0);
+			}
+		}
+
+		return Sqrt(res);
 	}
 
 	// Quaternion --------------------------------------------------

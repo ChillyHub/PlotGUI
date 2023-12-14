@@ -42,6 +42,10 @@ namespace Math
 	template <size_t N, typename T>
 	Vec<N, T> Abs(const Vec<N, T>& a);
 	template <size_t N, typename T>
+	T Min(const Vec<N, T>& a);
+	template <size_t N, typename T>
+	T Max(const Vec<N, T>& a);
+	template <size_t N, typename T>
 	Vec<N, T> Min(const Vec<N, T>& a, const Vec<N, T>& b);
 	template <size_t N, typename T>
 	Vec<N, T> Max(const Vec<N, T>& a, const Vec<N, T>& b);
@@ -91,6 +95,10 @@ namespace Math
 	template <typename T>
 	Vec<Type::Dynamic, T> Abs(const Vec<Type::Dynamic, T>& a);
 	template <typename T>
+	T Min(const Vec<Type::Dynamic, T>& a);
+	template <typename T>
+	T Max(const Vec<Type::Dynamic, T>& a);
+	template <typename T>
 	Vec<Type::Dynamic, T> Min(const Vec<Type::Dynamic, T>& a, const Vec<Type::Dynamic, T>& b);
 	template <typename T>
 	Vec<Type::Dynamic, T> Max(const Vec<Type::Dynamic, T>& a, const Vec<Type::Dynamic, T>& b);
@@ -129,6 +137,11 @@ namespace Math
 	Mat<Type::Dynamic, Type::Dynamic, T> Transpose(const Vec<Type::Dynamic, T>& a);
 	template <typename T>
 	Mat<Type::Dynamic, Type::Dynamic, T> Transpose(const Mat<Type::Dynamic, Type::Dynamic, T>& a);
+
+	template <size_t M, size_t N, typename T>
+	T Norm(const Mat<M, N, T>& a);
+	template <typename T>
+	T Norm(const Mat<Type::Dynamic, Type::Dynamic, T>& a);
 
 	// Quaternion --------------------------------------------------
 	// -------------------------------------------------------------

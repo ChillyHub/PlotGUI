@@ -148,10 +148,16 @@ namespace Math
 	Mat<Type::Dynamic, Type::Dynamic, T> Inverse(const Mat<Type::Dynamic, Type::Dynamic, T>& a);
 
 	template <size_t N, typename T>
-	Mat<N, N, T> Diagonal(const Mat<N, N, T>& a);
+	Mat<N, N, T> Diagonal(const Mat<N, N, T>& a, const int offset = 0);
 
 	template <typename T>
-	Mat<Type::Dynamic, Type::Dynamic, T> Diagonal(const Mat<Type::Dynamic, Type::Dynamic, T>& a);
+	Mat<Type::Dynamic, Type::Dynamic, T> Diagonal(const Mat<Type::Dynamic, Type::Dynamic, T>& a, const int offset = 0);
+
+	template <size_t N, typename T>
+	Vec<N, T> DiagonalAsVec(const Mat<N, N, T>& a);
+
+	template <typename T>
+	Vec<Type::Dynamic, T> DiagonalAsVec(const Mat<Type::Dynamic, Type::Dynamic, T>& a);
 
 	// correct
 	template <size_t M, size_t N, typename T>

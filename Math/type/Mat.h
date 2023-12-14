@@ -504,6 +504,9 @@ namespace Math
 
 	template <typename T>
 	std::ostream& operator<<(std::ostream& os, const Mat<Type::Dynamic, Type::Dynamic, T>& rhs);
+
+	template <typename T>
+	std::string& operator<<(std::string& s, const Mat<Type::Dynamic, Type::Dynamic, T>& rhs);
 } // namespace Math
 
 // inline file

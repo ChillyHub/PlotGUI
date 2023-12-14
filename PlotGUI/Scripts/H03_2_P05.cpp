@@ -32,31 +32,24 @@ public:
 		{
 			InitMatrixValue();
 
-			double minEigenvalue1;
-			DVecX minEigenvector1;
+			DMatX P, P_inv;
 			{
-				Profile("FindMinEigenPowerIteration");
+				Profile("TransformTridiagonalMatrixHouseholder");
 
-				FindMinEigenPowerIteration(minEigenvalue1, minEigenvector1);
+				TransformTridiagonalMatrixHouseholder(P_inv, P);
 			}
+
+			std::string xString0, xString1;
+			xString0 << P;
+			xString1 << P_inv * mA * P;
 
 			Console::Log("=======================================");
 			Console::Log("When n = %d", n);
 			Console::Log("=======================================");
-			Console::Log("Use Power Iteration Method: ");
-			Console::Log("    Min Eigen Value = %f", minEigenvalue1);
-			if (n < 6)
-			{
-				std::string xString;
-				xString << minEigenvector1;
-				Console::Log("    Min Eigen Vector = %s", xString.c_str());
-			}
-			else
-			{
-				Console::Log("    Min Eigen Vector = [%f, %f, %f, %f, %f, ...]",
-					minEigenvector1[0], minEigenvector1[1], minEigenvector1[2], minEigenvector1[3], minEigenvector1[4]);
-			}
-			Console::Log("Calculate time use: %f (ms)", Profiler::GetProfileInfo("FindMinEigenPowerIteration").deltaTime);
+			Console::Log("Use Householder Method: ");
+			Console::Log("P = %s", xString0.c_str());
+			Console::Log("D = %s", xString1.c_str());
+			Console::Log("Calculate time use: %f (ms)", Profiler::GetProfileInfo("TransformTridiagonalMatrixHouseholder").deltaTime);
 			Console::Log("=======================================");
 			Console::Log("\n");
 		}
@@ -72,16 +65,15 @@ public:
 
 			InitMatrixValue(mCurrPara);
 
-			double minEigenvalue1;
-			DVecX minEigenvector1;
+			DMatX P, P_inv;
 			{
-				Profile("FindMinEigenPowerIteration");
+				Profile("TransformTridiagonalMatrixHouseholder");
 
-				FindMinEigenPowerIteration(mCurrPara, minEigenvalue1, minEigenvector1);
+				TransformTridiagonalMatrixHouseholder(mCurrPara, P_inv, P);
 			}
 
 			int index = mCurrPara.n;
-			times[index] = Profiler::GetProfileInfo("FindMinEigenPowerIteration").deltaTime;
+			times[index] = Profiler::GetProfileInfo("TransformTridiagonalMatrixHouseholder").deltaTime;
 			Console::Log("Calculating n = %d || Time = %f (ms)", mCurrPara.n, times[index]);
 
 			mCurrPara.n++;
@@ -122,7 +114,7 @@ Draw a graph of the execution time of the computational process depending on the
 			mProfile = !mProfile;
 			if (mProfile)
 			{
-				mCurrPara.n = 10;
+				mCurrPara.n = 1;
 
 				x.assign(n, 0.0);
 				for (int i = 0; i < n; ++i)
@@ -140,7 +132,7 @@ Draw a graph of the execution time of the computational process depending on the
 		PlotDescriptor desc;
 		desc.axisFlags |= ImPlotAxisFlags_AutoFit;
 
-		Plot::Plot1("Calculate Eigen Time", "dimensioni", "Time (ms)",
+		Plot::Plot1("Calculate Transform Matrix P Time", "dimensioni", "Time (ms)",
 			x.data(), times.data(), x.size(), "Power Iteration", desc);
 	}
 
@@ -161,20 +153,20 @@ private:
 		{
 			for (int i = 0; i < para.n; ++i)
 			{
-				mA[j][i] = Min(i, j);
+				mA[j][i] = Min(i, j) + 1;
 			}
 		}
 	}
 
-	void FindMinEigenHausholder(double& minEigenvalue, DVecX& minEigenvector)
+	void TransformTridiagonalMatrixHouseholder(DMatX& P_inv, DMatX& P)
 	{
 		Para para;
 		para.n = n;
 
-		FindMinEigenHausholder(para, minEigenvalue, minEigenvector);
+		TransformTridiagonalMatrixHouseholder(para, P_inv, P);
 	}
 
-	void FindMinEigenHausholder(Para para, double& minEigenvalue, DVecX& minEigenvector)
+	void TransformTridiagonalMatrixHouseholder(Para para, DMatX& P_inv, DMatX& P)
 	{
 		DMatX Q, R;
 
@@ -183,50 +175,21 @@ private:
 			QRDecompose_HouseholderReflection(mA, Q, R);
 
 			DMatX D = R * Q;
-			DMatX T = D - Diagonal(D);
+			DMatX T = D - Diagonal(D) - Diagonal(D, -1) - Diagonal(D, 1);
 
-			if (CalculateA_E(T) < FLT_EPSILON)
+			if (Norm(T) < Epsilon)
 			{
-				return;
-			}
-		}
+				P_inv = Inverse(Q);
+				P = Q;
 
-		DMatX invA = Inverse(mA);
-
-		minEigenvector = DVecX(para.n, 1.0);
-
-		for (int i = 0; i < MAX_ITERATION; ++i)
-		{
-			DVecX x1 = invA * minEigenvector;
-
-			double value = Dot(minEigenvector, minEigenvector) / Dot(x1, minEigenvector);
-
-			if (Abs(value - minEigenvalue) < FLT_EPSILON)
-			{
-				minEigenvalue = value;
-				minEigenvector = Normailzed(x1);
 				return;
 			}
 
-			minEigenvalue = value;
-			minEigenvector = x1;
+			mA = D;
 		}
 
-		minEigenvector = Normailzed(minEigenvector);
-	}
-
-	double CalculateA_E(const Math::DMatX& A)
-	{
-		double res = 0.0;
-		for (int j = 0; j < A.row_len(); ++j)
-		{
-			for (int i = 0; i < A.col_len(); ++i)
-			{
-				res += Math::Pow(A[j][i], 2.0);
-			}
-		}
-
-		return Math::Sqrt(res);
+		P_inv = Inverse(Q);
+		P = Q;
 	}
 
 private:
@@ -245,6 +208,6 @@ public:
 	REGISTER_FUNC(createFunc, castFunc)
 	{
 		Registry::RegisterClassDe("H03_2_P05", createFunc, castFunc, "Project")
-			.RegisterField("n", &H03_2_P05::n, "int", "Range(10,100)");
+			.RegisterField("n", &H03_2_P05::n, "int", "Range(1,20)");
 	}
 };  RCLASS_END(H03_2_P05)

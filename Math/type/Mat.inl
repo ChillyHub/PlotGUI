@@ -1797,4 +1797,30 @@ namespace Math
 		os << std::endl;
 		return os;
 	}
+
+	template <typename T>
+	std::string& operator<<(std::string& s, const Mat<Type::Dynamic, Type::Dynamic, T>& rhs)
+	{
+		for (size_t i = 0; i < rhs.col_len(); ++i)
+		{
+			auto row = rhs.GetRow(i);
+			if (i == 0)
+				s += "\n[ ";
+			else
+				s += "  ";
+			for (size_t j = 0; j < rhs.row_len(); ++j)
+			{
+				T num = OUTNUM(row[j]);
+				s += std::to_string(num).substr(0, std::to_string(num).find(".", 0) + 7);
+				if (j < rhs.row_len() - 1)
+					s += ", ";
+			}
+			if (i == rhs.col_len() - 1)
+				s += " ]";
+			else
+				s += " ;\n";
+		}
+		s += "\n";
+		return s;
+	}
 } // namespace Math
