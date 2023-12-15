@@ -89,7 +89,7 @@ namespace PlotGUI
 				}
 				catch (const std::exception& e)
 				{
-					DisableProject(state.name);
+					//DisableProject(state.name);
 					Console::LogError(e.what());
 				}
 			}
@@ -110,7 +110,7 @@ namespace PlotGUI
 				}
 				catch (const std::exception& e)
 				{
-					DisableProject(state.name);
+					//DisableProject(state.name);
 					Console::LogError(e.what());
 				}
 			}
@@ -131,7 +131,7 @@ namespace PlotGUI
 			}
 			catch (const std::exception& e)
 			{
-				DisableProject(projectName);
+				//DisableProject(projectName);
 				Console::LogError(e.what());
 			}
 		}
