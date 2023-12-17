@@ -153,7 +153,7 @@ public:
 		//	}
 		//}
 
-		mCountIter1 = ImGui::Button("Count iterations of different para 1", ImVec2(-1.0f, 0.0f));
+		mCountIter1 = ImGui::Button("Count iterations of different para", ImVec2(-1.0f, 0.0f));
 	}
 
 	void OnPlot() override

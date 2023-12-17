@@ -58,7 +58,10 @@ namespace PlotGUI
 			{
 				ImPlot::SetupAxes(xLabel.c_str(), yLabel.c_str(), desc.axisFlags, desc.axisFlags);
 
-				ImPlot::PlotLine(name1.c_str(), x1, y1, count1, desc.lineFlags);
+				if (count1 > 0)
+				{
+					ImPlot::PlotLine(name1.c_str(), x1, y1, count1, desc.lineFlags);
+				}
 
 				ImPlot::EndPlot();
 			}
@@ -88,6 +91,53 @@ namespace PlotGUI
 
 				ImPlot::PlotLine(name1.c_str(), x1, y1, count1, desc.lineFlags);
 				ImPlot::PlotLine(name2.c_str(), x2, y2, count2, desc.lineFlags);
+
+				ImPlot::EndPlot();
+			}
+		}
+
+		template <typename T>
+		static void Plot2G(
+			const std::string& title, const std::string& xLabel, const std::string& yLabel, int count,
+			const std::function<T(T)>& getter1, const std::string& name1,
+			const std::function<T(T)>& getter2, const std::string& name2,
+			const PlotDescriptor& desc)
+		{
+			if (!NeedShow())
+			{
+				return;
+			}
+
+			std::string t = title;
+			if (!desc.showTitle)
+			{
+				t = std::string("##") + title;
+			}
+
+			std::vector<double> x(count);
+			std::vector<double> y1(count);
+			std::vector<double> y2(count);
+
+			if (ImPlot::BeginPlot(t.c_str(), { -1, -1 }, desc.plotFlags))
+			{
+				ImPlot::SetupAxes(xLabel.c_str(), yLabel.c_str(), desc.axisFlags, desc.axisFlags);
+
+				auto rect = ImPlot::GetPlotLimits();
+
+				double curr = rect.X.Min;
+				const double step = (rect.X.Max - curr) / count;
+
+				for (int i = 0; i < count; ++i)
+				{
+					x[i] = curr;
+					y1[i] = getter1(curr);
+					y2[i] = getter2(curr);
+
+					curr += step;
+				}
+
+				ImPlot::PlotLine(name1.c_str(), x.data(), y1.data(), count, desc.lineFlags);
+				ImPlot::PlotLine(name2.c_str(), x.data(), y2.data(), count, desc.lineFlags);
 
 				ImPlot::EndPlot();
 			}
@@ -280,6 +330,62 @@ namespace PlotGUI
 			}
 			ImGui::SameLine();
 			ImPlot::ColormapScale("Count", min, max, { 150, -1 }, "%g", ImPlotColormapScaleFlags_Opposite);
+			ImPlot::PopColormap();
+		}
+
+		template <typename T>
+		static void PlotColorMap2DG(
+			const std::string& title, const std::string& xLabel, const std::string& yLabel,
+			const std::function<T(T, T)>& getter, int rows, int cols, const std::string& name,
+			const PlotDescriptor& desc)
+		{
+			if (!NeedShow())
+			{
+				return;
+			}
+
+			std::string t = title;
+			if (!desc.showTitle)
+			{
+				t = std::string("##") + title;
+			}
+
+			std::vector<T> data(rows * cols);
+			T min = T(0);
+			T max = T(1);
+
+			ImPlot::PushColormap(ImPlotColormap_Viridis);
+			if (ImPlot::BeginPlot(t.c_str(), { ImGui::GetContentRegionAvail().x - 150.0f - ImGui::GetStyle().ItemSpacing.x, -1 }, desc.plotFlags))
+			{
+				ImPlot::SetupAxes(xLabel.c_str(), yLabel.c_str(), desc.axisFlags, desc.axisFlags);
+
+				// Generate data
+				auto rect = ImPlot::GetPlotLimits();
+
+				double currX = rect.X.Min;
+				const double stepX = (rect.X.Max - currX) / cols;
+
+				double currY = rect.Y.Min;
+				const double stepY = (rect.Y.Max - currY) / rows;
+
+				for (int i = rows - 1; i >= 0; --i)
+				{
+					for (int j = 0; j < cols; ++j)
+					{
+						data[i * cols + j] = getter(currX + stepX * j, currY + stepY * (rows - i - 1));
+					}
+				}
+
+				min = *std::min_element(data.begin(), data.end());
+				max = *std::max_element(data.begin(), data.end());
+
+				// Draw
+				ImPlot::PlotHeatmap(name.c_str(), data.data(), rows, cols, min, max, NULL, ImPlotPoint(rect.X.Min, rect.Y.Min), ImPlotPoint(rect.X.Max, rect.Y.Max));
+
+				ImPlot::EndPlot();
+			}
+			ImGui::SameLine();
+			ImPlot::ColormapScale("y", min, max, { 150, -1 }, "%g", ImPlotColormapScaleFlags_Opposite);
 			ImPlot::PopColormap();
 		}
 

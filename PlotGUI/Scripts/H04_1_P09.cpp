@@ -24,10 +24,6 @@ public: // Inspector Field
 	double eps2 = 0.001;
 
 private: // Custom Struct
-	struct Para
-	{
-		int n;
-	};
 
 public: // Override Func
 	void Start() override
