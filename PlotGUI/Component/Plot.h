@@ -12,6 +12,7 @@ namespace PlotGUI
 	{
 		bool showTitle = true;
 		ImPlotFlags plotFlags = 0;
+		ImPlotSubplotFlags subplotFlags = 0;
 		ImPlotAxisFlags axisFlags = 0;
 		ImPlotLineFlags lineFlags = 0;
 		ImPlotHeatmapFlags heatmapFlags = 0;
@@ -61,6 +62,55 @@ namespace PlotGUI
 				if (count1 > 0)
 				{
 					ImPlot::PlotLine(name1.c_str(), x1, y1, count1, desc.lineFlags);
+				}
+
+				ImPlot::EndPlot();
+			}
+		}
+
+		template <typename T>
+		static void Plot1G(
+			const std::string& title, const std::string& xLabel, const std::string& yLabel, int count, 
+			const std::function<T(T)>& getter1, const std::string& name1,
+			const T* scatterX, const T* scatterY, int scatterCount,
+			const PlotDescriptor& desc)
+		{
+			if (!NeedShow())
+			{
+				return;
+			}
+
+			std::string t = title;
+			if (!desc.showTitle)
+			{
+				t = std::string("##") + title;
+			}
+
+			std::vector<double> x(count);
+			std::vector<double> y(count);
+
+			if (ImPlot::BeginPlot(t.c_str(), { -1, -1 }, desc.plotFlags))
+			{
+				ImPlot::SetupAxes(xLabel.c_str(), yLabel.c_str(), desc.axisFlags, desc.axisFlags);
+
+				auto rect = ImPlot::GetPlotLimits();
+
+				double curr = rect.X.Min;
+				const double step = (rect.X.Max - curr) / count;
+
+				for (int i = 0; i < count; ++i)
+				{
+					x[i] = curr;
+					y[i] = getter1(curr);
+
+					curr += step;
+				}
+
+				ImPlot::PlotLine(name1.c_str(), x.data(), y.data(), count, desc.lineFlags);
+
+				if (scatterCount > 0)
+				{
+					ImPlot::PlotScatter("##Point", scatterX, scatterY, scatterCount);
 				}
 
 				ImPlot::EndPlot();
@@ -203,6 +253,63 @@ namespace PlotGUI
 		}
 
 		template <typename T>
+		static void Plot3G(
+			const std::string& title, const std::string& xLabel, const std::string& yLabel, int count,
+			const std::function<T(T)>& getter1, const std::string& name1,
+			const std::function<T(T)>& getter2, const std::string& name2,
+			const std::function<T(T)>& getter3, const std::string& name3,
+			const T* scatterX, const T* scatterY, int scatterCount,
+			const PlotDescriptor& desc)
+		{
+			if (!NeedShow())
+			{
+				return;
+			}
+
+			std::string t = title;
+			if (!desc.showTitle)
+			{
+				t = std::string("##") + title;
+			}
+
+			std::vector<double> x(count);
+			std::vector<double> y1(count);
+			std::vector<double> y2(count);
+			std::vector<double> y3(count);
+
+			if (ImPlot::BeginPlot(t.c_str(), { -1, -1 }, desc.plotFlags))
+			{
+				ImPlot::SetupAxes(xLabel.c_str(), yLabel.c_str(), desc.axisFlags, desc.axisFlags);
+
+				auto rect = ImPlot::GetPlotLimits();
+
+				double curr = rect.X.Min;
+				const double step = (rect.X.Max - curr) / count;
+
+				for (int i = 0; i < count; ++i)
+				{
+					x[i] = curr;
+					y1[i] = getter1(curr);
+					y2[i] = getter2(curr);
+					y3[i] = getter3(curr);
+
+					curr += step;
+				}
+
+				ImPlot::PlotLine(name1.c_str(), x.data(), y1.data(), count, desc.lineFlags);
+				ImPlot::PlotLine(name2.c_str(), x.data(), y2.data(), count, desc.lineFlags);
+				ImPlot::PlotLine(name3.c_str(), x.data(), y3.data(), count, desc.lineFlags);
+
+				if (scatterCount > 0)
+				{
+					ImPlot::PlotScatter("##Point", scatterX, scatterY, scatterCount);
+				}
+
+				ImPlot::EndPlot();
+			}
+		}
+
+		template <typename T>
 		static void PlotShade3G(
 			const std::string& title, const std::string& xLabel, const std::string& yLabel, int count,
 			const std::function<T(T)>& getter1, const std::string& name1,
@@ -270,6 +377,102 @@ namespace PlotGUI
 			const std::string& title,
 			const T* x1, const T* y1, int* count, const std::string* names, int n,
 			const PlotDescriptor& desc);
+
+		template <typename T>
+		static void Subplots2_2G2G(
+			const std::string& title,
+			const std::string& subtitle1, const std::string& xLabel1, const std::string& yLabel1, int count1,
+			const std::function<T(T)>& getter11, const std::string& name11,
+			const std::function<T(T)>& getter12, const std::string& name12,
+			const T* scatterX1, const T* scatterY1, int scatterCount1,
+			const std::string& subtitle2, const std::string& xLabel2, const std::string& yLabel2, int count2,
+			const std::function<T(T)>& getter21, const std::string& name21,
+			const std::function<T(T)>& getter22, const std::string& name22,
+			const T* scatterX2, const T* scatterY2, int scatterCount2,
+			const PlotDescriptor& desc)
+		{
+			if (!NeedShow())
+			{
+				return;
+			}
+
+			std::string t = title;
+			if (!desc.showTitle)
+			{
+				t = std::string("##") + title;
+			}
+
+			if (ImPlot::BeginSubplots(t.c_str(), 1, 2, { -1, -1 }, desc.subplotFlags))
+			{
+				if (ImPlot::BeginPlot(subtitle1.c_str(), { -1, -1 }, desc.plotFlags))
+				{
+					ImPlot::SetupAxes(xLabel1.c_str(), yLabel1.c_str(), desc.axisFlags, desc.axisFlags);
+
+					auto rect = ImPlot::GetPlotLimits();
+
+					double curr = rect.X.Min;
+					const double step = (rect.X.Max - curr) / count1;
+
+					std::vector<double> x(count1);
+					std::vector<double> y1(count1);
+					std::vector<double> y2(count1);
+
+					for (int i = 0; i < count1; ++i)
+					{
+						x[i] = curr;
+						y1[i] = getter11(curr);
+						y2[i] = getter12(curr);
+
+						curr += step;
+					}
+
+					ImPlot::PlotLine(name11.c_str(), x.data(), y1.data(), count1, desc.lineFlags);
+					ImPlot::PlotLine(name12.c_str(), x.data(), y2.data(), count1, desc.lineFlags);
+
+					if (scatterCount1 > 0)
+					{
+						ImPlot::PlotScatter("##Point1", scatterX1, scatterY1, scatterCount1);
+					}
+
+					ImPlot::EndPlot();
+				}
+
+				if (ImPlot::BeginPlot(subtitle2.c_str(), { -1, -1 }, desc.plotFlags))
+				{
+					ImPlot::SetupAxes(xLabel2.c_str(), yLabel2.c_str(), desc.axisFlags, desc.axisFlags);
+
+					auto rect = ImPlot::GetPlotLimits();
+
+					double curr = rect.X.Min;
+					const double step = (rect.X.Max - curr) / count2;
+
+					std::vector<double> x(count2);
+					std::vector<double> y1(count2);
+					std::vector<double> y2(count2);
+
+					for (int i = 0; i < count2; ++i)
+					{
+						x[i] = curr;
+						y1[i] = getter21(curr);
+						y2[i] = getter22(curr);
+
+						curr += step;
+					}
+
+					ImPlot::PlotLine(name21.c_str(), x.data(), y1.data(), count2, desc.lineFlags);
+					ImPlot::PlotLine(name22.c_str(), x.data(), y2.data(), count2, desc.lineFlags);
+
+					if (scatterCount2 > 0)
+					{
+						ImPlot::PlotScatter("##Point1", scatterX2, scatterY2, scatterCount2);
+					}
+
+					ImPlot::EndPlot();
+				}
+
+				ImPlot::EndSubplots();
+			}
+		}
 
 	public:
 		template <typename T>
