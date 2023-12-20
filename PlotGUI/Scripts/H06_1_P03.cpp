@@ -89,6 +89,11 @@ public: // Override Func
 				Console::Log("\n");
 			});
 		}
+
+		if (mSaveFile)
+		{
+			SaveCoefficients("Coefficients.json", mCoefficients);
+		}
 	}
 
 	void OnChange() override
@@ -119,6 +124,8 @@ Draw graphs of the interpolation spline, the desired function and the given valu
 		ImGui::Spacing();
 
 		mCalcCompare = ImGui::Button("Show Compare Plots", { -1, 0 });
+
+		mSaveFile = ImGui::Button("Save coeffocients", { -1, 0 });
 	}
 
 	void OnPlot() override
@@ -168,17 +175,28 @@ Draw graphs of the interpolation spline, the desired function and the given valu
 	}
 
 private: // Class Function
-	void SaveCoefficients(const std::string& filename)
+	void SaveCoefficients(const std::string& filename, const CubicSplineCoefficients& coef)
 	{
 		json j;
-		j["count"] = mCoefficients.count;
-		j["x"] = mCoefficients.x;
-		j["y"] = mCoefficients.y;
-		j["b"] = mCoefficients.b;
-		j["c"] = mCoefficients.c;
-		j["d"] = mCoefficients.d;
 
-		SaveJson(filename, j);
+		std::string path = "Resources/H06_1_P03/";
+
+		Serialization::ReadJson(path + filename, j);
+
+		j["coefficients"].push_back(
+			{
+				{ "count", coef.count },
+				{ "x", coef.x },
+				{ "y", coef.y },
+				{ "b", coef.b },
+				{ "c", coef.c },
+				{ "d", coef.d },
+			});
+
+		if (Serialization::SaveJson(path, filename, j))
+		{
+			Console::LogInfo("Save file succeed");
+		}
 	}
 
 private: // Static Function
@@ -299,6 +317,7 @@ private: // Data Field
 private: // State Field
 	bool mCalcCompare = false;
 	bool mPlotCompare = false;
+	bool mSaveFile = false;
 
 public: // Register Function
 	REGISTER_FUNC(createFunc, castFunc)

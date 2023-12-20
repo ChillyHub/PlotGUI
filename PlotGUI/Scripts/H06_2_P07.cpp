@@ -70,6 +70,11 @@ public: // Override Func
 				Console::Log("\n");
 			});
 		}
+
+		if (mSaveFile)
+		{
+			SaveCoefficients("Coefficients.json", mCoefficients);
+		}
 	}
 
 	void OnChange() override
@@ -103,6 +108,8 @@ Draw graphs of the approximation polynomial, the desired function and the given 
 		ImGui::Spacing();
 
 		mCalcCompare = ImGui::Button("Show Compare Plots", { -1, 0 });
+
+		mSaveFile = ImGui::Button("Save coeffocients", { -1, 0 });
 	}
 
 	void OnPlot() override
@@ -157,6 +164,31 @@ Draw graphs of the approximation polynomial, the desired function and the given 
 	}
 
 private: // Class Function
+	void SaveCoefficients(const std::string& filename, const PolynomialCoefficients& coef)
+	{
+		json j;
+
+		std::string path = "Resources/H06_2_P07/";
+
+		Serialization::ReadJson(path + filename, j);
+
+		std::vector<double> data(coef.count);
+		for (int i = 0; i < coef.count; ++i)
+		{
+			data[i] = coef.coef[i];
+		}
+
+		j["coefficients"].push_back(
+			{
+				{ "count", coef.count },
+				{ "coef", data }
+			});
+
+		if (Serialization::SaveJson(path, filename, j))
+		{
+			Console::LogInfo("Save file succeed");
+		}
+	}
 
 private: // Static Function
 	static double GridFunction(double x)
@@ -221,6 +253,7 @@ private: // Data Field
 private: // State Field
 	bool mCalcCompare = false;
 	bool mPlotCompare = false;
+	bool mSaveFile = false;
 
 public: // Register Function
 	REGISTER_FUNC(createFunc, castFunc)

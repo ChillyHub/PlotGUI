@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <filesystem>
 
 #include "ThirdPartys/Json/json.h"
 
@@ -11,22 +12,36 @@ namespace PlotGUI
 	class Serialization
 	{
 	public:
-		static void SaveJson(const std::string& path, const json& json)
+		static bool SaveJson(const std::string& path, const std::string& filename, const json& json)
 		{
-			std::ofstream file(path);
-			file << json;
+			std::string projPath = PROJET_DIR;
+
+			std::filesystem::create_directories(projPath + path);
+
+			std::ofstream file(projPath + path + filename);
+
+			if (!file)
+				return false;
+
+			file << std::setw(4) << json;
 			file.close();
+
+			return true;
 		}
 
-		static json ReadJson(const std::string& path)
+		static bool ReadJson(const std::string& path, json& json)
 		{
-			json json;
+			std::string projPath = PROJET_DIR;
 
-			std::ifstream file(path);
+			std::ifstream file(projPath + path);
+
+			if (!file)
+				return false;
+
 			file >> json;
 			file.close();
 
-			return json;
+			return true;
 		}
 	};
 }
