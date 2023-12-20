@@ -27,6 +27,10 @@ if(WIN32)
         "${PROJECT_SOURCE_DIR}/ThirdPartys/Implot/*.h"
         "${PROJECT_SOURCE_DIR}/ThirdPartys/Implot/*.cpp")
 
+    file(GLOB_RECURSE JSON_FILE CONFIGURE_DEPENDS
+        "${PROJECT_SOURCE_DIR}/ThirdPartys/Json/*.h"
+        "${PROJECT_SOURCE_DIR}/ThirdPartys/Json/*.cpp")
+
     file(GLOB_RECURSE MATH_FILE CONFIGURE_DEPENDS
         "${PROJECT_SOURCE_DIR}/Math/*.h" 
         "${PROJECT_SOURCE_DIR}/Math/*.inl" 
@@ -42,6 +46,7 @@ if(WIN32)
 
     source_group(TREE ${PROJECT_SOURCE_DIR}/ThirdPartys/Imgui FILES ${IMGUI_FILE})
     source_group(TREE ${PROJECT_SOURCE_DIR}/ThirdPartys/Implot FILES ${IMPLOT_FILE})
+    source_group(TREE ${PROJECT_SOURCE_DIR}/ThirdPartys/Json FILES ${JSON_FILE})
     source_group(TREE ${PROJECT_SOURCE_DIR}/Math FILES ${MATH_FILE})
     source_group(TREE ${PROJECT_SOURCE_DIR}/Scripts FILES ${SCRIPTS_FILE})
     source_group(TREE ${PROJECT_SOURCE_DIR}/PlotGUI FILES ${PLOTGUI_FILE})
@@ -54,19 +59,24 @@ if(WIN32)
     target_include_directories(Implot PUBLIC ${PROJECT_SOURCE_DIR}/ThirdPartys/Imgui ${PROJECT_SOURCE_DIR}/ThirdPartys/Implot)
     set_target_properties(Implot PROPERTIES FOLDER "ThirdPartys")
 
+    add_library(Json STATIC ${JSON_FILE})
+    target_include_directories(Json PUBLIC ${PROJECT_SOURCE_DIR}/ThirdPartys/Json)
+    set_target_properties(Json PROPERTIES FOLDER "ThirdPartys")
+
     add_library(Math STATIC ${MATH_FILE})
     target_include_directories(Math PUBLIC ${PROJECT_SOURCE_DIR}/Math)
     set_target_properties(Math PROPERTIES FOLDER "Math")
 
     add_executable(PlotGUI ${PLOTGUI_FILE})
-    target_link_libraries(PlotGUI PUBLIC d3d11 d3dcompiler dxgi Imgui Implot Math)
+    target_link_libraries(PlotGUI PUBLIC d3d11 d3dcompiler dxgi Imgui Implot Json Math)
     target_include_directories(PlotGUI PUBLIC
         ${PROJECT_SOURCE_DIR}/ThirdPartys/Imgui  
         ${PROJECT_SOURCE_DIR}/ThirdPartys/Implot
+        ${PROJECT_SOURCE_DIR}/ThirdPartys/Json
         ${PROJECT_SOURCE_DIR}/Math 
         ${PROJECT_SOURCE_DIR}/Scripts
         ${PROJECT_SOURCE_DIR}/PlotGUI
-	${PROJECT_SOURCE_DIR})
+	    ${PROJECT_SOURCE_DIR})
     set_target_properties(PlotGUI PROPERTIES FOLDER "PlotGUI")
 
     # VS startup project

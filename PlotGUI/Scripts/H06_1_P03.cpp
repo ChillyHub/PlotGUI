@@ -168,6 +168,18 @@ Draw graphs of the interpolation spline, the desired function and the given valu
 	}
 
 private: // Class Function
+	void SaveCoefficients(const std::string& filename)
+	{
+		json j;
+		j["count"] = mCoefficients.count;
+		j["x"] = mCoefficients.x;
+		j["y"] = mCoefficients.y;
+		j["b"] = mCoefficients.b;
+		j["c"] = mCoefficients.c;
+		j["d"] = mCoefficients.d;
+
+		SaveJson(filename, j);
+	}
 
 private: // Static Function
 	static double RungeFunction(double x)

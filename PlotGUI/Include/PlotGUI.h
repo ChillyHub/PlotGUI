@@ -7,4 +7,5 @@
 #include "PlotGUI/Component/Plot.h"
 #include "PlotGUI/Component/Inspector.h"
 #include "PlotGUI/Component/Profiler.h"
+#include "PlotGUI/Component/Serialization.h"
 #include "PlotGUI/Thread/Threads.h"
