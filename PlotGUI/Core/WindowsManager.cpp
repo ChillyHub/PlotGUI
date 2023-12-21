@@ -22,6 +22,18 @@ namespace PlotGUI
 
 	}
 
+	std::shared_ptr<GuiWindow> WindowsManager::GetWindow(const std::wstring& windowName)
+	{
+#if WIN32
+		if (m_Windows.find(windowName) != m_Windows.end())
+		{
+			return m_Windows[windowName];
+		}
+#endif // WIN32
+
+		return std::shared_ptr<GuiWindow>();
+	}
+
 	void WindowsManager::DestroyAllWindows()
 	{
 		for (auto [name, window] : m_Windows)

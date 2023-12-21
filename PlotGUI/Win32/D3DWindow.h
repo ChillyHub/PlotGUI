@@ -15,11 +15,12 @@ namespace PlotGUI
         D3DWindow(const std::wstring& name, unsigned int width, unsigned int height);
     public:
         virtual void InitWindow() override;
-        virtual bool PollEvent() override;
         virtual void Resize() override;
         virtual void StartFrame() override;
         virtual void Present() override;
         virtual void Destroy() override;
+
+        virtual WindowEvent PollEvent() override;
 
     private:
         // Forward declarations of helper functions
@@ -27,6 +28,8 @@ namespace PlotGUI
         void CleanupDeviceD3D();
         void CreateRenderTarget();
         void CleanupRenderTarget();
+
+        LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     public:
         static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

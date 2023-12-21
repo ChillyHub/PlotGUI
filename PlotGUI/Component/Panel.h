@@ -1,12 +1,15 @@
 #pragma once
 
 #include "imgui.h"
+#include "Utils/Singleton.h"
 
 #include <string>
+#include <thread>
+#include <mutex>
 
 namespace PlotGUI
 {
-	class Panel
+	class Panel : public Singleton<Panel>
 	{
 	public:
 		static void Init();
@@ -25,12 +28,20 @@ namespace PlotGUI
 		static void SetLightStyle();
 		static void SetDarkStyle();
 
-	private:
-		static void DrawDockingSpace();
+	public:
+		Panel() = default;
 
 	private:
-		static int s_CurrentPage;
-		static bool s_ShowEditor;
-		static std::string s_CurrentProject;
+		static void DrawDockingSpace();
+		static void UpdateFPSThread();
+
+	private:
+		int m_CurrentPage = 1;
+		bool m_ShowEditor = false;
+		std::string m_CurrentProject = "StartScript";
+		int m_FrameCount = 0;
+		int m_Fps = 0;
+
+		std::thread m_FpsThread;
 	};
 }

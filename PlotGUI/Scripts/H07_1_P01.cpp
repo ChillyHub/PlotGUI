@@ -56,12 +56,10 @@ public: // Override Func
 			{
 				for (int i = 0; i < 40; ++i)
 				{
-					DVecX x, y;
-					SolveIntegralEquation(0.0, 1.0, 0.0, 1.0, static_cast<int>(mSplitNs[i]), x, y);
+					DVecX xx, yy;
+					SolveIntegralEquation(0.0, 1.0, 0.0, 1.0, static_cast<int>(mSplitNs[i]), xx, yy);
 
-					y = DVecX(y.length(), 2.0);
-
-					mResiduals[i] = SolveResidual(0.0, 1.0, static_cast<int>(mSplitNs[i]), x, y);
+					mResiduals[i] = SolveResidual(0.0, 1.0, static_cast<int>(mSplitNs[i]), xx, yy);
 
 					mPlotCompare = true;
 				}
@@ -153,7 +151,7 @@ private: // Static Function
 			{
 				double s = as + hs * j;
 				double w = (j == 0 || j == n) ? hs / 3 : (j % 2 == 0) ? 2 * hs / 3 : 4 * hs / 3;
-				A[i][j] -= w * K(x[i], s);
+				A[j][i] -= w * K(x[i], s);
 			}
 
 			b[i] = F(x[i]);
@@ -174,10 +172,10 @@ private: // Static Function
 
 			for (int j = 0; j <= n; ++j)
 			{
-				double s = as + hs * i;
-				double w = (i == 0 || i == n) ? hs / 3 : (i % 2 == 0) ? 2 * hs / 3 : 4 * hs / 3;
+				double s = as + hs * j;
+				double w = (j == 0 || j == n) ? hs / 3 : (j % 2 == 0) ? 2 * hs / 3 : 4 * hs / 3;
 
-				sum += w * K(x[i], s) * y[j];
+				sum -= w * K(x[i], s) * y[j];
 			}
 
 			residual += Pow(sum - F(x[i]), 2.0f);

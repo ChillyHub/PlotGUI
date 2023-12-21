@@ -93,6 +93,8 @@ namespace PlotGUI
 			{
 				ImPlot::SetupAxes(xLabel.c_str(), yLabel.c_str(), desc.axisFlags, desc.axisFlags);
 
+				ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, 3.0);
+
 				auto rect = ImPlot::GetPlotLimits();
 
 				double curr = rect.X.Min;

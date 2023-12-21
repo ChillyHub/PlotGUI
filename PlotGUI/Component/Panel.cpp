@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <thread>
 
 #include "Component/Plot.h"
 #include "Reflection/Include/Reflect.h"
@@ -16,10 +17,6 @@ class StartScript;
 
 namespace PlotGUI
 {
-    int Panel::s_CurrentPage = 1;
-    bool Panel::s_ShowEditor = false;
-    std::string Panel::s_CurrentProject = "StartScript";
-
 	void Panel::Init()
 	{
 		// Setup Dear ImGui context
@@ -75,6 +72,9 @@ namespace PlotGUI
         // Console
         io.Fonts->AddFontFromFileTTF(PROJET_DIR "ThirdPartys/Imgui/misc/fonts/consola.ttf",
             fontsize * 0.9f, NULL);
+
+        Instance().m_FpsThread = std::thread(UpdateFPSThread);
+        Instance().m_FpsThread.detach();
 	}
 
 	void Panel::Destory()
@@ -92,6 +92,8 @@ namespace PlotGUI
 	void Panel::UpdateFrame()
 	{
         DrawDockingSpace();
+
+        Instance().m_FrameCount++;
 	}
 
 	void Panel::DrawPanel()
@@ -146,20 +148,20 @@ namespace PlotGUI
 		        {
 			        if (state.isActive)
 			        {
-                        s_CurrentProject = name;
+                        Instance().m_CurrentProject = name;
 
-                        auto proj = ProjectsManager::Instance().GetProject(s_CurrentProject);
+                        auto proj = ProjectsManager::Instance().GetProject(Instance().m_CurrentProject);
 
                         proj->OnInspector();
 
                         break;
 			        }
-                    s_CurrentProject = std::string();
+                    Instance().m_CurrentProject = std::string();
 		        }
 	        }
 	        catch (const std::exception& e)
 	        {
-                ProjectsManager::Instance().DisableProject(s_CurrentProject);
+                ProjectsManager::Instance().DisableProject(Instance().m_CurrentProject);
                 Console::LogError(e.what());
 	        }
         }
@@ -181,7 +183,7 @@ namespace PlotGUI
 
 	void Panel::DrawEditorPanel()
 	{
-		if (s_ShowEditor)
+		if (Instance().m_ShowEditor)
 		{
             ImGui::ShowStyleEditor();
 		}
@@ -449,10 +451,10 @@ namespace PlotGUI
 	            {
 		            if (ImGui::MenuItem(name.c_str()))
 		            {
-                        ProjectsManager::Instance().DisableProject(s_CurrentProject);
+                        ProjectsManager::Instance().DisableProject(Instance().m_CurrentProject);
                         ProjectsManager::Instance().ActiveProject(name);
 
-                        s_CurrentProject = name;
+                        Instance().m_CurrentProject = name;
 		            }
 	            }
 
@@ -470,7 +472,7 @@ namespace PlotGUI
                 }
                 if (ImGui::MenuItem("Custom Style"))
                 {
-                    s_ShowEditor = !s_ShowEditor;
+                    Instance().m_ShowEditor = !Instance().m_ShowEditor;
                 }
 
                 ImGui::EndMenu();
@@ -494,6 +496,13 @@ namespace PlotGUI
                 ImGui::EndMenu();
             }
 
+            std::string fps = "FPS: " + std::to_string(Instance().m_Fps);
+            auto posX = (ImGui::GetCursorPosX() + ImGui::GetColumnWidth() - ImGui::CalcTextSize(fps.c_str()).x
+                - ImGui::GetScrollX() - ImGui::GetStyle().ItemSpacing.x);
+            ImGui::SetCursorPosX(posX);
+
+            ImGui::Text(fps.c_str());
+
             ImGui::EndMenuBar();
         }
 
@@ -502,5 +511,16 @@ namespace PlotGUI
         //_______________________________________________________________________________________________
         // SHOW DOCKING SPACE END ///////////////////////////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////
+	}
+
+	void Panel::UpdateFPSThread()
+	{
+		while (true)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+            Instance().m_Fps = Instance().m_FrameCount;
+            Instance().m_FrameCount = 0;
+		}
 	}
 }

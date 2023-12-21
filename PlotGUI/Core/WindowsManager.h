@@ -15,6 +15,8 @@ namespace PlotGUI
 		std::shared_ptr<GuiWindow> CreateGuiWindow(
 			std::wstring name, unsigned int width = 1200, unsigned int height = 800);
 
+		std::shared_ptr<GuiWindow> GetWindow(const std::wstring& windowName);
+
 		void DestroyAllWindows();
 		void DestroyWindow(const std::wstring& windowName);
 

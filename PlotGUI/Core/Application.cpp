@@ -13,10 +13,12 @@ namespace PlotGUI
 	{
 		m_MainWindow = WindowsManager::Instance().CreateGuiWindow(L"Plot GUI");
 
-		m_MainWindow->InitWindow();
-
 		// Panel Init
 		Panel::Init();
+
+		m_MainWindow->InitWindow();
+
+		
 	}
 
 	void Application::Run()
@@ -26,11 +28,18 @@ namespace PlotGUI
 		bool shouldClose = false;
 		while (!shouldClose)
 		{
-			shouldClose = m_MainWindow->PollEvent();
+			WindowEvent event = m_MainWindow->PollEvent();
+			shouldClose = event == WindowEvent::Quit;
 
 			if (shouldClose)
 			{
 				break;
+			}
+
+			if (event == WindowEvent::Pause)
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				continue;
 			}
 
 			m_MainWindow->Resize();

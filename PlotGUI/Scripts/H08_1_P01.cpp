@@ -7,10 +7,14 @@
 using namespace PlotGUI;
 using namespace Math;
 
-RCLASS H07_2_P02 : public Script
+RCLASS H08_1_P01 : public Script
 {
 public: // Inspector Field
-	int n = 10;
+	int n = 50;
+	double u0 = 1.0;
+	double duDt0 = 0.0;
+	double a = 0.0;
+	double b = 4.0 * PI;
 
 private: // Custom Struct
 	struct CubicSplineCoefficients
@@ -34,39 +38,52 @@ private: // Custom Struct
 public: // Override Func
 	void Start() override
 	{
-		mSplitNs.assign(40, 0.0);
-		mResiduals.assign(40, 0.0);
 
-		for (int i = 0; i < 40; ++i)
-		{
-			mSplitNs[i] = i + 1;
-		}
 	}
 
 	void Update() override
 	{
-		DVecX x, y;
-		SolveIntegralEquation(0.0, 1.0, 0.0, 1.0, n, x, y);
+		const std::vector<std::function<double(double, const DVecX&)>> functions = { DuDt, D2uDt2 };
 
-		mCoefficients = GetNaturalCubicSplineCoefficients(x, y);
+		std::vector<DVecX> result;
+		{
+			Profile("Runge Kutta 4");
+			result = RungeKutta4(functions, { u0, duDt0 }, a, b, n);
+		}
+
+		mCoefficients = GetNaturalCubicSplineCoefficients(result[0], result[1]);
 
 		if (mCalcCompare)
 		{
-			Threads::Run([&]()
-			{
-				for (int i = 0; i < 40; ++i)
-				{
-					DVecX x, y;
-					SolveIntegralEquation(0.0, 1.0, 0.0, 1.0, static_cast<int>(mSplitNs[i]), x, y);
+			std::string s;
+			Console::Log((s << result[0]).c_str());
+			s.clear();
+			Console::Log((s << result[1]).c_str());
 
-					mResiduals[i] = SolveResidual(0.0, 1.0, static_cast<int>(mSplitNs[i]), x, y);
+			//Threads::Run([&]()
+			//{
+			//	for (int i = 0; i < 40; ++i)
+			//	{
+			//		DVecX x, y;
+			//		SolveIntegralEquation(0.0, 1.0, 0.0, 1.0, static_cast<int>(mSplitNs[i]), x, y);
+			//
+			//		mResiduals[i] = SolveResidual(0.0, 1.0, static_cast<int>(mSplitNs[i]), x, y);
+			//
+			//		mPlotCompare = true;
+			//	}
+			//
+			//	Console::Log("Finish Calculate");
+			//	Console::Log("\n");
+			//});
+		}
 
-					mPlotCompare = true;
-				}
-
-				Console::Log("Finish Calculate");
-				Console::Log("\n");
-			});
+		if (mShowProfile)
+		{
+			Console::Log("======================================================");
+			Console::Log("Runge Kutta 4 Method: ");
+			Console::Log("When n = %d, use time %f (ms)", n, Profiler::GetProfileInfo("Runge Kutta 4").deltaTime);
+			Console::Log("======================================================");
+			Console::Log("\n");
 		}
 	}
 
@@ -79,7 +96,7 @@ public: // Override Func
 	{
 		ImGui::Spacing();
 
-		ImGui::TextWrapped("Work 07: practice02");
+		ImGui::TextWrapped("Work 08: practice01");
 		ImGui::TextWrapped("Write a program for the numerical solution of the Fredholm integral equation of the second kind by the Galerkin method \
 using piecewise linear coordinate functions \n\
 phi^i(x) != 0  xi + 1 < x < x^i  i = 1,2,...,n \n\
@@ -92,9 +109,11 @@ Using this program, find an approximate solution to the integral equation for di
 		ImGui::Spacing();
 		ImGui::Separator();
 
-		Inspector::ShowRegisteredFields(this, "H07_2_P02");
+		Inspector::ShowRegisteredFields(this, "H08_1_P01");
 
 		ImGui::Spacing();
+
+		mShowProfile = ImGui::Button("Show Profile", { -1, 0 });
 
 		mCalcCompare = ImGui::Button("Calculate Residual", { -1, 0 });
 	}
@@ -104,123 +123,77 @@ Using this program, find an approximate solution to the integral equation for di
 		PlotDescriptor desc1;
 		desc1.plotFlags |= ImPlotFlags_Equal;
 
-		Plot::Plot1G<double>("Solve Integral Equation -- Galerkin", "", "", 400,
+		Plot::Plot1G<double>("Solve Differential Equations -- Explicit Runge-Kutta 4th", "", "", 400,
 			[&](double x) -> double
 			{
 				return CubicSplineFunction(x, mCoefficients);
-			}, "Solve f(x)",
+			}, "Solve u(t)",
 			mCoefficients.x.data(), mCoefficients.y.data(), mCoefficients.count, desc1);
 
 		if (mPlotCompare)
 		{
-			PlotDescriptor desc2;
-			desc2.axisFlags |= ImPlotAxisFlags_AutoFit;
-
-			Plot::Plot1("Residual of Solve", "split n", "residual",
-				mSplitNs.data(), mResiduals.data(), mSplitNs.size(), "Galerkin Method", desc2);
+			//PlotDescriptor desc2;
+			//desc2.axisFlags |= ImPlotAxisFlags_AutoFit;
+			//
+			//Plot::Plot1("Residual of Solve", "split n", "residual",
+			//	mSplitNs.data(), mResiduals.data(), mSplitNs.size(), "Galerkin Method", desc2);
 		}
 	}
 
 private: // Class Function
 
 private: // Static Function
-	static double K(double x, double s)
+	static double D2uDt2(double t, const DVecX& u)
 	{
-		return Abs(x - s);
+		return -Sin(u[0]);
 	}
 
-	static double F(double x)
+	static double DuDt(double t, const DVecX& u)
 	{
-		return x * x * x;
+		return u[1];
 	}
 
-	static double PhiPiecewise(double x, int i, int n, double a, double b)
+	static std::vector<DVecX> RungeKutta4(
+		const std::vector<std::function<double(double, const DVecX&)>>& functions,
+		const DVecX& initialYs, double start, double end, int n)
 	{
-		double h = (b - a) / n;
-		double xi = i * h;
+		double h = (end - start) / n;
+		int yCount = static_cast<int>(initialYs.length());
 
-		if (xi - h <= x && x < xi) 
+		std::vector<DVecX> result(yCount + 1, DVecX(n + 1, 0.0));
+
+		DVecX ts(n + 1, 0.0);
+		DMatX ys(0.0, yCount, n + 1);
+
+		ts[0] = start;
+		ys[0] = initialYs;
+
+		for (int i = 0; i < n; ++i)
 		{
-			return (x - (xi - h)) / h;
-		}
-		else if (xi <= x && x < xi + h) 
-		{
-			return (xi + h - x) / h;
-		}
+			double t = start + (i + 1) * h;
 
-		return 0.0;
-	}
+			ts[i + 1] = t;
 
-	static double IntergralSimpson(const std::function<double(double)>& f, double a, double b, int n)
-	{
-		double h = (b - a) / n;
-
-		double sum = f(a) + f(b);
-
-		for (int i = 1; i < n; ++i)
-		{
-			double x = a + h * i;
-			sum += (i % 2 == 0) ? 2 * f(x) : 4 * f(x);
-		}
-
-		return sum * h / 3;
-	}
-
-	static void SolveIntegralEquation(double ax, double bx, double as, double bs, int n, DVecX& x, DVecX& y)
-	{
-		x = DVecX(n + 1);
-
-		DVecX b(n + 1);
-		DMatX A(n + 1, n + 1);
-
-		double hx = (bx - ax) / n;
-
-		for (int i = 0; i <= n; ++i)
-		{
-			x[i] = ax + hx * i;
-
-			for (int j = 0; j <= n; ++j)
+			for (int j = 0; j < yCount; ++j)
 			{
-				A[j][i] = IntergralSimpson([&](double x) -> double
-				{
-					return (PhiPiecewise(x, j, n, ax, bx) - IntergralSimpson([&](double s) -> double
-					{
-						return PhiPiecewise(s, j, n, as, bs) * K(x, s);
-					}, as, bs, n)) * PhiPiecewise(x, i, n, ax, bx);
-				}, ax, bx, n);
+				double s1 = functions[j](t, ys[i]);
+				double s2 = functions[j](t + h / 2.0, ys[i] + h * s1 / 2.0);
+				double s3 = functions[j](t + h / 2.0, ys[i] + h * s2 / 2.0);
+				double s4 = functions[j](t + h, ys[i] + h * s3);
+
+				ys[i + 1][j] = ys[i][j] + h * (s1 + 2.0 * s2 + 2.0 * s3 + s4) / 6.0;
 			}
-
-			b[i] = IntergralSimpson([&](double x) -> double
-			{
-				return F(x) * PhiPiecewise(x, i, n, ax, bx);
-			}, ax, bx, n);
 		}
 
-		y = Solve(A, b);
-	}
+		ys = Transpose(ys);
 
-	static double SolveResidual(double as, double bs, int n, const DVecX& x, const DVecX& y)
-	{
-		double hs = (bs - as) / n;
-
-		double residual = 0.0;
-
-		for (int i = 0; i <= n; ++i)
+		result[0] = ts;
+		for (int i = 0; i < yCount; ++i)
 		{
-			double sum = y[i];
-
-			for (int j = 0; j <= n; ++j)
-			{
-				double s = as + hs * j;
-				double w = (j == 0 || j == n) ? hs / 3 : (j % 2 == 0) ? 2 * hs / 3 : 4 * hs / 3;
-
-				sum -= w * K(x[i], s) * y[j];
-			}
-
-			residual += Pow(sum - F(x[i]), 2.0f);
+			result[i + 1] = ys[i];
 		}
 
-		return Sqrt(residual);
+		return result;
 	}
 
 	static double CubicSplineFunction(double x, const CubicSplineCoefficients& coef)
@@ -302,17 +275,20 @@ private: // Static Function
 
 private: // Data Field
 	CubicSplineCoefficients mCoefficients;
-	std::vector<double> mSplitNs;
-	std::vector<double> mResiduals;
 
 private: // State Field
 	bool mCalcCompare = false;
 	bool mPlotCompare = false;
+	bool mShowProfile = false;
 
 public: // Register Function
 	REGISTER_FUNC(createFunc, castFunc)
 	{
-		Registry::RegisterClassDe("H07_2_P02", createFunc, castFunc, "Project")
-			.RegisterField("n", &H07_2_P02::n, "int", "Range(1,40)");
+		Registry::RegisterClassDe("H08_1_P01", createFunc, castFunc, "Project")
+			.RegisterField("n", &H08_1_P01::n, "int", "Range(1,400)")
+			.RegisterField("u0", &H08_1_P01::u0, "double")
+			.RegisterField("duDt0", &H08_1_P01::duDt0, "double")
+			.RegisterField("a", &H08_1_P01::a, "double")
+			.RegisterField("b", &H08_1_P01::b, "double");
 	}
-};  RCLASS_END(H07_2_P02)
+};  RCLASS_END(H08_1_P01)

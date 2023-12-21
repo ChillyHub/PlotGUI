@@ -36,9 +36,9 @@ namespace PlotGUI
         }
 
         template <typename Func, typename ... Args>
-        std::future<std::result_of_t<Func(Args...)>> Submit(Func&& func, Args&&... args)
+        std::future<std::invoke_result_t<Func, Args...>> Submit(Func&& func, Args&&... args)
         {
-            using ResType = std::result_of_t<Func(Args...)>;
+            using ResType = std::invoke_result_t<Func, Args...>;
             auto task = std::make_shared<std::packaged_task<ResType()>>(std::bind(std::forward<Func>(func), std::forward<Args>(args)...));
             std::future<ResType> res(task->get_future());
             mQueue.Push([task]() { (*task)(); });

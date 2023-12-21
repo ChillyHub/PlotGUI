@@ -4,6 +4,7 @@
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx11.h"
 
+#include "Core/WindowsManager.h"
 #include "Component/Panel.h"
 
 #include <stdexcept>
@@ -16,15 +17,12 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 
 namespace PlotGUI
 {
-    unsigned int GuiWindow::s_resizeWidth = 0;
-    unsigned int GuiWindow::s_resizeHeight = 0;
-
 	D3DWindow::D3DWindow(const std::wstring& name, unsigned int width, unsigned int height)
 	{
         m_windowName = name;
 
-        s_resizeWidth = width;
-        s_resizeHeight = height;
+        m_resizeWidth = width;
+        m_resizeHeight = height;
 	}
 
 	void D3DWindow::InitWindow()
@@ -52,8 +50,8 @@ namespace PlotGUI
         RECT rect;
         rect.top = 0;
         rect.left = 0;
-        rect.right = static_cast<LONG>(s_resizeWidth);
-        rect.bottom = static_cast<LONG>(s_resizeHeight);
+        rect.right = static_cast<LONG>(m_resizeWidth);
+        rect.bottom = static_cast<LONG>(m_resizeHeight);
         ::AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
 
         HWND hwnd = ::CreateWindowW(
@@ -74,9 +72,6 @@ namespace PlotGUI
             ThrowRuntimeError("Create Device D3D Failed");
         }
 
-        // Init panel
-        Panel::Init();
-
         // Setup Platform/Renderer backends
         ImGui_ImplWin32_Init(hwnd);
         ImGui_ImplDX11_Init(m_device, m_deviceContext);
@@ -85,7 +80,7 @@ namespace PlotGUI
         m_windowClass = wc;
 	}
 
-	bool D3DWindow::PollEvent()
+    WindowEvent D3DWindow::PollEvent()
 	{
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
@@ -95,20 +90,23 @@ namespace PlotGUI
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
             if (msg.message == WM_QUIT)
-                return true;
+                return WindowEvent::Quit;
         }
 
-        return false;
+        if (mAppPaused)
+            return WindowEvent::Pause;
+
+        return WindowEvent::Run;
 	}
 
 	void D3DWindow::Resize()
 	{
         // Handle window resize (we don't resize directly in the WM_SIZE handler)
-        if (s_resizeWidth != 0 && s_resizeHeight != 0)
+        if (m_resizeWidth != 0 && m_resizeHeight != 0)
         {
             CleanupRenderTarget();
-            m_swapChain->ResizeBuffers(0, s_resizeWidth, s_resizeHeight, DXGI_FORMAT_UNKNOWN, 0);
-            s_resizeWidth = s_resizeHeight = 0;
+            m_swapChain->ResizeBuffers(0, m_resizeWidth, m_resizeHeight, DXGI_FORMAT_UNKNOWN, 0);
+            m_resizeWidth = m_resizeHeight = 0;
             CreateRenderTarget();
         }
 	}
@@ -263,7 +261,7 @@ namespace PlotGUI
 	#define WM_DPICHANGED 0x02E0 // From Windows SDK 8.1+ headers
 #endif
 
-	LRESULT D3DWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    LRESULT D3DWindow::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
         if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
             return true;
@@ -271,10 +269,59 @@ namespace PlotGUI
         switch (msg)
         {
         case WM_SIZE:
-            if (wParam == SIZE_MINIMIZED)
-                return 0;
-            s_resizeWidth = LOWORD(lParam); // Queue resize
-            s_resizeHeight = HIWORD(lParam);
+            if (m_device)
+            {
+                if (wParam == SIZE_MINIMIZED)
+                {
+                    mAppPaused = true;
+                    mMinimized = true;
+                    mMaximized = false;
+                }
+                else if (wParam == SIZE_MAXIMIZED)
+                {
+                    mAppPaused = false;
+                    mMinimized = false;
+                    mMaximized = true;
+                    m_resizeWidth = LOWORD(lParam); // Queue resize
+                    m_resizeHeight = HIWORD(lParam);
+                }
+                else if (wParam == SIZE_RESTORED)
+                {
+                    // Restoring from minimized state?
+                    if (mMinimized)
+                    {
+                        mAppPaused = false;
+                        mMinimized = false;
+                        m_resizeWidth = LOWORD(lParam); // Queue resize
+                        m_resizeHeight = HIWORD(lParam);
+                    }
+            
+                    // Restoring from maximized state?
+                    else if (mMaximized)
+                    {
+                        mAppPaused = false;
+                        mMaximized = false;
+                        m_resizeWidth = LOWORD(lParam); // Queue resize
+                        m_resizeHeight = HIWORD(lParam);
+                    }
+                    else if (mResizing)
+                    {
+                        // If user is dragging the resize bars, we do not resize 
+                        // the buffers here because as the user continuously 
+                        // drags the resize bars, a stream of WM_SIZE messages are
+                        // sent to the window, and it would be pointless (and slow)
+                        // to resize for each WM_SIZE message received from dragging
+                        // the resize bars.  So instead, we reset after the user is 
+                        // done resizing the window and releases the resize bars, which 
+                        // sends a WM_EXITSIZEMOVE message.
+                    }
+                    else // API call such as SetWindowPos or mSwapChain->SetFullscreenState.
+                    {
+                        m_resizeWidth = LOWORD(lParam); // Queue resize
+                        m_resizeHeight = HIWORD(lParam);
+                    }
+                }
+            }
             return 0;
         case WM_SYSCOMMAND:
             if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
@@ -295,4 +342,9 @@ namespace PlotGUI
         }
         return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 	}
+
+    LRESULT D3DWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    {
+        return std::static_pointer_cast<D3DWindow, GuiWindow>(WindowsManager::Instance().GetWindow(L"Plot GUI"))->MsgProc(hWnd, msg, wParam, lParam);
+    }
 }
