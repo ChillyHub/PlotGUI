@@ -53,30 +53,6 @@ public: // Override Func
 
 		mCoefficients = GetNaturalCubicSplineCoefficients(result[0], result[1]);
 
-		if (mCalcCompare)
-		{
-			std::string s;
-			Console::Log((s << result[0]).c_str());
-			s.clear();
-			Console::Log((s << result[1]).c_str());
-
-			//Threads::Run([&]()
-			//{
-			//	for (int i = 0; i < 40; ++i)
-			//	{
-			//		DVecX x, y;
-			//		SolveIntegralEquation(0.0, 1.0, 0.0, 1.0, static_cast<int>(mSplitNs[i]), x, y);
-			//
-			//		mResiduals[i] = SolveResidual(0.0, 1.0, static_cast<int>(mSplitNs[i]), x, y);
-			//
-			//		mPlotCompare = true;
-			//	}
-			//
-			//	Console::Log("Finish Calculate");
-			//	Console::Log("\n");
-			//});
-		}
-
 		if (mShowProfile)
 		{
 			Console::Log("======================================================");
@@ -97,11 +73,9 @@ public: // Override Func
 		ImGui::Spacing();
 
 		ImGui::TextWrapped("Work 08: practice01");
-		ImGui::TextWrapped("Write a program for the numerical solution of the Fredholm integral equation of the second kind by the Galerkin method \
-using piecewise linear coordinate functions \n\
-phi^i(x) != 0  xi + 1 < x < x^i  i = 1,2,...,n \n\
-and uniform division of the integration interval. \n\
-Using this program, find an approximate solution to the integral equation for different n.");
+		ImGui::TextWrapped("Write a program to numerically solve the Cauchy problem for a system of ordinary differential equations \
+using the fourth-order explicit Runge-Kutta method. \n\
+Demonstrate the functionality of this program in solving the Cauchy problem.");
 
 		ImGui::Spacing();
 		ImGui::Spacing();
@@ -114,8 +88,6 @@ Using this program, find an approximate solution to the integral equation for di
 		ImGui::Spacing();
 
 		mShowProfile = ImGui::Button("Show Profile", { -1, 0 });
-
-		mCalcCompare = ImGui::Button("Calculate Residual", { -1, 0 });
 	}
 
 	void OnPlot() override
@@ -129,15 +101,6 @@ Using this program, find an approximate solution to the integral equation for di
 				return CubicSplineFunction(x, mCoefficients);
 			}, "Solve u(t)",
 			mCoefficients.x.data(), mCoefficients.y.data(), mCoefficients.count, desc1);
-
-		if (mPlotCompare)
-		{
-			//PlotDescriptor desc2;
-			//desc2.axisFlags |= ImPlotAxisFlags_AutoFit;
-			//
-			//Plot::Plot1("Residual of Solve", "split n", "residual",
-			//	mSplitNs.data(), mResiduals.data(), mSplitNs.size(), "Galerkin Method", desc2);
-		}
 	}
 
 private: // Class Function
@@ -277,8 +240,6 @@ private: // Data Field
 	CubicSplineCoefficients mCoefficients;
 
 private: // State Field
-	bool mCalcCompare = false;
-	bool mPlotCompare = false;
 	bool mShowProfile = false;
 
 public: // Register Function
