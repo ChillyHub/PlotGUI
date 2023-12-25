@@ -9,7 +9,7 @@ if(WIN32)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
     set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMakeBuild")
 
-    project(PhysicalModels LANGUAGES CXX)
+    project(PlotGUI LANGUAGES CXX)
 
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Release)
@@ -18,6 +18,7 @@ if(WIN32)
     add_definitions(-DUNICODE -D_UNICODE)
     add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES)
     add_compile_definitions(PROJET_DIR="${PROJECT_SOURCE_DIR}/")
+    add_compile_definitions(WIN32)
 
     file(GLOB_RECURSE IMGUI_FILE CONFIGURE_DEPENDS
         "${PROJECT_SOURCE_DIR}/ThirdPartys/Imgui/*.h"

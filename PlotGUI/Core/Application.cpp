@@ -3,8 +3,6 @@
 #include "WindowsManager.h"
 #include "ProjectsManager.h"
 
-#include "imgui.h"
-
 #include "Component/Panel.h"
 
 namespace PlotGUI
@@ -17,14 +15,10 @@ namespace PlotGUI
 		Panel::Init();
 
 		m_MainWindow->InitWindow();
-
-		
 	}
 
 	void Application::Run()
 	{
-		ProjectsManager::Instance().ActiveProject("StartScript");
-
 		bool shouldClose = false;
 		while (!shouldClose)
 		{
