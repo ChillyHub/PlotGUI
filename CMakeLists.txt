@@ -53,6 +53,7 @@ if(WIN32)
 
     add_library(Imgui STATIC ${IMGUI_FILE})
     target_include_directories(Imgui PUBLIC ${PROJECT_SOURCE_DIR}/ThirdPartys/Imgui)
+    target_link_libraries(Imgui PUBLIC dwmapi d3dcompiler)
     set_target_properties(Imgui PROPERTIES FOLDER "ThirdPartys")
 
     add_library(Implot STATIC ${IMPLOT_FILE})
