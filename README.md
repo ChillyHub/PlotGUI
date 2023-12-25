@@ -57,8 +57,9 @@ Different task prefixes represent different task categories. The following are t
    ```
 
 6. Or, you can select the task from "Projects" in the menu bar after entering the program.
+   
    ![屏幕截图 2023-12-25 222529](./Resources/pictures/fig2.png)
-
+   
 7. Now, you can work on the Plot and Inspector panels.
 
 ## Third Party

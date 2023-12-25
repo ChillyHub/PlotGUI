@@ -26,7 +26,7 @@ public: // Override Func
 		mIterationCounts.clear();
 		mResiduals.clear();
 
-		SolveDifferenceMethod(0.0, 1.0, 0.0, 1.0, 0.0, n, kai, mX1, mX2, mY, mIterationCounts, mResiduals);
+		//SolveDifferenceMethod(0.0, 1.0, 0.0, 1.0, 0.0, n, kai, mX1, mX2, mY, mIterationCounts, mResiduals);
 
 		//if (mComplete)
 		//{
@@ -92,20 +92,20 @@ Draw the resulting solution and conduct computational experiments to study the r
 		limits.yMin = 0.0;
 		limits.yMax = 1.0;
 
-		for (int i = 0; i < (n + 1) / 2; ++i)
+		int c = static_cast<int>(Sqrt(mY.length()));
+
+		for (int i = 0; i < c / 2; ++i)
 		{
-			for (int j = 0; j < n + 1; ++j)
+			for (int j = 0; j < c; ++j)
 			{
-				double tmp = mY[i * (n + 1) + j];
-				mY[i * (n + 1) + j] = mY[(n - i) * (n + 1) + j];
-				mY[(n - i) * (n + 1) + j] = tmp;
+				double tmp = mY[i * c + j];
+				mY[i * c + j] = mY[(c - 1 - i) * c + j];
+				mY[(c - 1 - i) * c + j] = tmp;
 			}
 		}
 
-		std::cout << mY << std::endl;
-
 		Plot::PlotColorMap2D("Solve Differential Equations -- Difference, Jacobi, ConjugateGradient Method", "x1", "x2",
-			mY.data(), n + 1, n + 1, "u(x1, x2)", desc1, limits);
+			mY.data(), c, c, "u(x1, x2)", desc1, limits);
 	}
 
 private: // Class Function

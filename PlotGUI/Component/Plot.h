@@ -520,8 +520,8 @@ namespace PlotGUI
 				t = std::string("##") + title;
 			}
 
-			int min = *std::min_element(data, data + rows * cols);
-			int max = *std::max_element(data, data + rows * cols);
+			int min = 0.0;
+			int max = 1.0;
 
 			ImPlot::PushColormap(ImPlotColormap_Viridis);
 			if (ImPlot::BeginPlot(t.c_str(), { ImGui::GetContentRegionAvail().x - 150.0f - ImGui::GetStyle().ItemSpacing.x, -1 }, desc.plotFlags))
@@ -529,7 +529,13 @@ namespace PlotGUI
 				ImPlot::SetupAxes(xLabel.c_str(), yLabel.c_str(), desc.axisFlags, desc.axisFlags);
 				//ImPlot::SetupAxesLimits(limits.xMin, limits.xMax, limits.yMin, limits.yMax);
 
-				ImPlot::PlotHeatmap(name.c_str(), data, rows, cols, min, max, NULL, ImPlotPoint(limits.xMin, limits.yMin), ImPlotPoint(limits.xMax, limits.yMax));
+				if (rows * cols)
+				{
+					min = *std::min_element(data, data + rows * cols);
+					max = *std::max_element(data, data + rows * cols);
+
+					ImPlot::PlotHeatmap(name.c_str(), data, rows, cols, min, max, NULL, ImPlotPoint(limits.xMin, limits.yMin), ImPlotPoint(limits.xMax, limits.yMax));
+				}
 
 				ImPlot::EndPlot();
 			}
