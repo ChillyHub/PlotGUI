@@ -770,7 +770,7 @@ namespace Math
 		
 		T pivot = T(1);
 		Vec<Type::Dynamic, T> res(N);
-		Mat<Type::Dynamic, Type::Dynamic, T> AA(A, N, N);
+		Mat<Type::Dynamic, Type::Dynamic, T> AA(A);
 		for (size_t k = 0; k < N - 1; ++k)
 		{
 			for (size_t i = k + 1; i < N; ++i)
@@ -1090,7 +1090,7 @@ namespace Math
 			return false;
 
 		auto pm = PrincipalMinors(A);
-		for (size_t i = 1; i <= pm.length(); ++i)
+		for (size_t i = 0; i < pm.length(); ++i)
 		{
 			if (pm[i] < 0)
 				return false;

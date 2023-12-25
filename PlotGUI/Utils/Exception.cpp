@@ -25,7 +25,7 @@ namespace PlotGUI
 			std::to_wstring(m_LineNumber) + L"; error: " + msg;
 	}
 
-	char const* PlotException::what() const
+	char const* PlotException::what() const noexcept
 	{
 		return "Unknown";
 	}
@@ -37,7 +37,7 @@ namespace PlotGUI
 		MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, buffer, 512);
 		return std::wstring(buffer);
 #else
-		return std::wstring("Unknown");
+		return std::wstring(L"Unknown");
 #endif
 	}
 }

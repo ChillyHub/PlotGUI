@@ -20,13 +20,13 @@ namespace PlotGUI
 
     public:
         static void EnableLogToTerminal(bool b = true);
-        static void Log(const char* str, ...) IM_FMTARGS(2);
+        static void Log(const char* str, ...) IM_FMTARGS(1);
         static void Log(const std::string& str);
-        static void LogInfo(const char* str, ...) IM_FMTARGS(2);
+        static void LogInfo(const char* str, ...) IM_FMTARGS(1);
         static void LogInfo(const std::string& str);
-        static void LogWarning(const char* str, ...) IM_FMTARGS(2);
+        static void LogWarning(const char* str, ...) IM_FMTARGS(1);
         static void LogWarning(const std::string& str);
-        static void LogError(const char* str, ...) IM_FMTARGS(2);
+        static void LogError(const char* str, ...) IM_FMTARGS(1);
         static void LogError(const std::string& str);
 
     private:

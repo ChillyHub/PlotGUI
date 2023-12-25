@@ -16,11 +16,11 @@ namespace Math
 	template <typename T> inline T Ceil(T a) { return std::ceil(a); }
 	template <typename T> inline T Lerp(T a, T b, float t) 
 	{ 
-		return std::lerp(a, b, t); 
+		return lerp(a, b, t); 
 	}
 	template <typename T> inline T Lerp(T a, T b, double t) 
 	{ 
-		return std::lerp(a, b, t); 
+		return lerp(a, b, t); 
 	}
 	template <typename T> inline T Clamp(T a, int min, int max)
 	{

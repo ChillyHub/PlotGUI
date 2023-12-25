@@ -154,7 +154,7 @@ private: // Static Function
 		};
 
 		double t1 = GetA(i + 1, a, h, k) * IntegrandTrapezoidal(integrand1, a + i * h, a + (i + 1) * h, 10);
-		double t2 = GetA(i, a, h, k) * IntegrandTrapezoidal(integrand1, a + (i - 1) * h, a + i * h, 10);
+		double t2 = GetA(i, a, h, k) * IntegrandTrapezoidal(integrand2, a + (i - 1) * h, a + i * h, 10);
 
 		return (t1 + t2) / (h * h);
 	}

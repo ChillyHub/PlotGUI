@@ -16,7 +16,7 @@ namespace PlotGUI
         PlotException(long hr, const std::wstring& functionName, const std::wstring& filename, int lineNumber);
 
         std::wstring ToString() const;
-        char const* what() const override;
+        char const* what() const noexcept override;
 
     public:
         static std::wstring AnsiToWString(const std::string& str);

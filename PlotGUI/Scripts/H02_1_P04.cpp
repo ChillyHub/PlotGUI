@@ -54,35 +54,6 @@ public:
 			Console::Log("\n");
 		}
 
-		//if (mCountIter)
-		//{
-		//	if (mCurrPara.alpha > 1.01f)
-		//	{
-		//		mCurrPara.n += 10;
-		//		mCurrPara.alpha = 0.0f;
-		//
-		//		mCurrPara.i--;
-		//		mCurrPara.j = 0;
-		//	}
-		//
-		//	if (mCurrPara.n > 100)
-		//	{
-		//		mCountIter = false;
-		//		Console::Log("Finish!");
-		//		return;
-		//	}
-		//
-		//	InitMatrixValue(mCurrPara);
-		//
-		//	int count = Iterate(mCurrPara);
-		//	int index = mCurrPara.i * 11 + mCurrPara.j;
-		//	counts[index] = count;
-		//	Console::Log("Calculating n = %d, alpha = %f || Count = %d ...", mCurrPara.n, mCurrPara.alpha, count);
-		//
-		//	mCurrPara.alpha += 0.1f;
-		//	mCurrPara.j++;
-		//}
-
 		if (mCountIter1)
 		{
 			for (int i = 0; i < 10; ++i)
@@ -139,19 +110,6 @@ public:
 		ImGui::Spacing();
 
 		mCalculate = ImGui::Button("Calculate!", ImVec2(-1.0f, 0.0f));
-
-		//if (ImGui::Button("Count iterations of different para", ImVec2(-1.0f, 0.0f)))
-		//{
-		//	mCountIter = !mCountIter;
-		//	if (mCountIter)
-		//	{
-		//		mCurrPara.n = 10;
-		//		mCurrPara.alpha = 0.0f;
-		//		mCurrPara.i = 9;
-		//		mCurrPara.j = 0;
-		//		mCurrIndex = 0;
-		//	}
-		//}
 
 		mCountIter1 = ImGui::Button("Count iterations of different para", ImVec2(-1.0f, 0.0f));
 	}
