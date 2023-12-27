@@ -107,7 +107,7 @@ at Kai = 10^-2, 1, 10^2 \n\
 
 		int c = static_cast<int>(Sqrt(mYc.length()));
 
-		Plot::PlotColorMap2DL("Solve Differential Equations -- Difference, Jacobi, ConjugateGradient Method", "x1", "x2",
+		Plot::PlotColorMap2DL("Solve Differential Equations -- Difference, Jacobi, ConjugateGradient Method", "x1", "x2", "u", 
 			mYc.data(), c, c, 400, 400, "u(x1, x2)", desc1, limits);
 
 		if (mShowCalculate)
@@ -120,7 +120,7 @@ at Kai = 10^-2, 1, 10^2 \n\
 
 				int cc = static_cast<int>(Sqrt(mYs[k].length()));
 
-				Plot::PlotColorMap2DL(title, "x1", "x2",
+				Plot::PlotColorMap2DL(title, "x1", "x2", "u", 
 					mYs[k].data(), cc, cc, 400, 400, "u(x1, x2)", desc1, limits);
 			}
 		}

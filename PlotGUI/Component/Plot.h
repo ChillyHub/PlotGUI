@@ -8,6 +8,8 @@
 
 #include <cmath>
 
+#include <iostream>
+
 namespace PlotGUI
 {
 	struct PlotDescriptor
@@ -571,7 +573,7 @@ namespace PlotGUI
 
 		template <typename T>
 		static void PlotColorMap2DL(
-			const std::string& title, const std::string& xLabel, const std::string& yLabel,
+			const std::string& title, const std::string& xLabel, const std::string& yLabel, const std::string& zLabel,
 			const T* data, int rows, int cols, int drawRows, int drawCols, const std::string& name,
 			const PlotDescriptor& desc, const AxesLimits& limits)
 		{
@@ -599,12 +601,11 @@ namespace PlotGUI
 				{
 					std::vector<double> dat(rows * cols);
 
-					for (int i = 0; i < rows / 2 + 1; ++i)
+					for (int i = 0; i < rows; ++i)
 					{
-						for (int j = 0; j < rows; ++j)
+						for (int j = 0; j < cols; ++j)
 						{
-							dat[i * rows + j] = data[(rows - 1 - i) * rows + j];
-							dat[(rows - 1 - i) * rows + j] = data[i * rows + j];
+							dat[i * cols + j] = data[(rows - 1 - i) * cols + j];
 						}
 					}
 
@@ -624,17 +625,17 @@ namespace PlotGUI
 							double ii = i + 0.5;
 							double jj = j + 0.5;
 
-							int sx1 = static_cast<int>(std::floor(ii * rateR));
-							int sy1 = static_cast<int>(std::floor(jj * rateC));
-							int sx2 = std::min(sx1 + 1, rows - 1);
-							int sy2 = std::min(sy1 + 1, cols - 1);
+							int sx1 = static_cast<int>(std::floor(jj * rateC));
+							int sy1 = static_cast<int>(std::floor(ii * rateR));
+							int sx2 = std::min(sx1 + 1, cols - 1);
+							int sy2 = std::min(sy1 + 1, rows - 1);
 
-							double lx = ii * rateR - sx1;
-							double ly = jj * rateC - sy1;
+							double lx = jj * rateC - sx1;
+							double ly = ii * rateR - sy1;
 
 							plotData[index] = lerp(
-								lerp(dat[sy1 * rows + sx1], dat[sy1 * rows + sx2], lx),
-								lerp(dat[sy2 * rows + sx1], dat[sy2 * rows + sx2], lx),
+								lerp(dat[sy1 * cols + sx1], dat[sy1 * cols + sx2], lx),
+								lerp(dat[sy2 * cols + sx1], dat[sy2 * cols + sx2], lx),
 								ly);
 						}
 					}
@@ -648,7 +649,7 @@ namespace PlotGUI
 				ImPlot::EndPlot();
 			}
 			ImGui::SameLine();
-			ImPlot::ColormapScale("Count", min, max, { 150, -1 }, "%g", ImPlotColormapScaleFlags_Opposite);
+			ImPlot::ColormapScale(zLabel.c_str(), min, max, { 150, -1 }, "%g", ImPlotColormapScaleFlags_Opposite);
 			ImPlot::PopColormap();
 		}
 
