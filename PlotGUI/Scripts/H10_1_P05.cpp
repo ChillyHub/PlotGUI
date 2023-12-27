@@ -10,7 +10,7 @@ using namespace Math;
 RCLASS H10_1_P05 : public Script
 {
 public: // Inspector Field
-	int n = 5;
+	int n = 10;
 	double kai = 1.0;
 
 private: // Custom Struct
@@ -23,36 +23,43 @@ public: // Override Func
 
 	void Update() override
 	{
-		mIterationCounts.clear();
-		mResiduals.clear();
+		if (mComplete)
+		{
+			mX1c = mX1;
+			mX2c = mX2;
+			mYc = mY;
 
-		//SolveDifferenceMethod(0.0, 1.0, 0.0, 1.0, 0.0, n, kai, mX1, mX2, mY, mIterationCounts, mResiduals);
+			mComplete = false;
 
-		//if (mComplete)
-		//{
-		//	mPlotCoefficients[0] = mCoefficients[0];
-		//	mPlotCoefficients[1] = mCoefficients[1];
-		//	mPlotCoefficients[2] = mCoefficients[2];
-		//
-		//	mComplete = false;
-		//
-		//	Threads::Run([&]()
-		//	{
-		//		const double kais[3] = { 0.01, 1.0, 100.0 };
-		//
-		//		for (int i = 0; i < 3; ++i)
-		//		{
-		//			double h = h0 / divs[i];
-		//
-		//			DVecX x, y;
-		//			SolveDifferenceMethod(0.0001, l, miu1, miu2, h, x, y);
-		//
-		//			mCoefficients[i] = GetNaturalCubicSplineCoefficients(x, y);
-		//		}
-		//
-		//		mComplete = true;
-		//	});
-		//}
+			Threads::Run([&]()
+				{
+					std::vector<double> _a, _b;
+
+					SolveDifferenceMethod(0.0, 1.0, 0.0, 1.0, 0.0, n, kai, mX1, mX2, mY, _a, _b);
+
+					mComplete = true;
+				});
+		}
+
+		if (mCalculate)
+		{
+			for (int i = 0; i < 3; ++i)
+			{
+				mIterationCounts[i].clear();
+				mResiduals[i].clear();
+
+				Threads::Run([&](int ii)
+					{
+						double kais[3] = { 0.01, 1.0, 100.0 };
+
+						SolveDifferenceMethod(0.0, 1.0, 0.0, 1.0, 0.0, n, kais[ii], mX1s[ii], mX2s[ii], mYs[ii], mIterationCounts[ii], mResiduals[ii]);
+
+						Console::Log("Finish Calculate in (n = %d, kai = %f)", n, kais[ii]);
+
+						mCompletes[ii] = true;
+					}, i);
+			}
+		}
 	}
 
 	void OnChange() override
@@ -65,11 +72,12 @@ public: // Override Func
 		ImGui::Spacing();
 
 		ImGui::TextWrapped("Work 10: practice05");
-		ImGui::TextWrapped("Write a program for the difference solution of boundary value problems \
-using an exact difference scheme when using trapezoidal quadrature formulas to calculate the coefficients. \
-Apply this program to solve a boundary value problem (for l = 1 and miu_1 = miu_2 = 0) with discontinuity coefficient k(x) and right-hand side f(x) = 0. \n\
-Compare the approximate solution on a sequence of three nested grids h = h0, h0 / 2, h0 / 4. \
-Draw the resulting solution and conduct computational experiments to study the rate of convergence of the difference scheme used.");
+		ImGui::TextWrapped("Write a program for numerical solution on a grid of the problem that is uniform in each direction \n\
+in a rectangle Omega = [0, 1] x [0, 1]. Use the Jacobi iterative method (B = D) and the choice of iterative parameters using the conjugate gradient method. \
+Using this program, solve the unit square boundary value problem f(x) = 1 and \n\
+at Kai = 10^-2, 1, 10^2 \n\
+- Draw a numerical solution \n\
+- Investigate the convergence of the method");
 
 		ImGui::Spacing();
 		ImGui::Spacing();
@@ -78,6 +86,11 @@ Draw the resulting solution and conduct computational experiments to study the r
 		ImGui::Separator();
 
 		Inspector::ShowRegisteredFields(this, "H10_1_P05");
+
+		mCalculate = ImGui::Button("Calculate in different Kai", { -1.0f, 0.0f });
+		mShowCalculate |= mCalculate;
+
+		mShowResiduals |= ImGui::Button("Show Residuals in different Kai", { -1.0f, 0.0f });
 	}
 
 	void OnPlot() override
@@ -92,20 +105,38 @@ Draw the resulting solution and conduct computational experiments to study the r
 		limits.yMin = 0.0;
 		limits.yMax = 1.0;
 
-		int c = static_cast<int>(Sqrt(mY.length()));
+		int c = static_cast<int>(Sqrt(mYc.length()));
 
-		for (int i = 0; i < c / 2; ++i)
+		Plot::PlotColorMap2DL("Solve Differential Equations -- Difference, Jacobi, ConjugateGradient Method", "x1", "x2",
+			mYc.data(), c, c, 400, 400, "u(x1, x2)", desc1, limits);
+
+		if (mShowCalculate)
 		{
-			for (int j = 0; j < c; ++j)
+			double kais[3] = { 0.01, 1.0, 100.0 };
+
+			for (int k = 0; k < 3; ++k)
 			{
-				double tmp = mY[i * c + j];
-				mY[i * c + j] = mY[(c - 1 - i) * c + j];
-				mY[(c - 1 - i) * c + j] = tmp;
+				std::string title = "Solve Differential Equations -- Kai = " + std::to_string(kais[k]);
+
+				int cc = static_cast<int>(Sqrt(mYs[k].length()));
+
+				Plot::PlotColorMap2DL(title, "x1", "x2",
+					mYs[k].data(), cc, cc, 400, 400, "u(x1, x2)", desc1, limits);
 			}
 		}
 
-		Plot::PlotColorMap2D("Solve Differential Equations -- Difference, Jacobi, ConjugateGradient Method", "x1", "x2",
-			mY.data(), c, c, "u(x1, x2)", desc1, limits);
+		if (mShowResiduals)
+		{
+			PlotDescriptor desc2;
+			desc2.axisFlags |= ImPlotAxisFlags_AutoFit;
+
+			std::string kais[3] = { "Kai = 0.01", "Kai = 1", "Kai = 100" };
+
+			Plot::Plot3("Residuals", "Iterations Count", "Residuals",
+				mIterationCounts[0].data(), mResiduals[0].data(), mIterationCounts[0].size(), kais[0],
+				mIterationCounts[1].data(), mResiduals[1].data(), mIterationCounts[1].size(), kais[1],
+				mIterationCounts[2].data(), mResiduals[2].data(), mIterationCounts[2].size(), kais[2], desc2);
+		}
 	}
 
 private: // Class Function
@@ -115,10 +146,6 @@ private: // Class Function
 		DMatX A;
 		DVecX b;
 		CoefficientsTrapezoidal(a1, b1, a2, b2, n, u0, kai, A, b);
-
-		//bool is = IsPositiveDefinite(A);
-		//
-		//std::cout << IsPositiveDefinite(A) << A << b << std::endl;
 
 		double h1 = (b1 - a1) / n;
 		double h2 = (b2 - a2) / n;
@@ -136,22 +163,6 @@ private: // Class Function
 
 		y = DVecX((n + 1) * (n + 1), 0.0);
 		IterateJacobi(A, b, y, iterationCounts, residuals);
-
-		//y = DVecX((n + 1) * (n + 1), 0.0);
-		//for (int i = 0; i <= n; ++i)
-		//{
-		//	for (int j = 0; j <= n; ++j)
-		//	{
-		//		if (i == 0 || i == n || j == 0 || j == n)
-		//		{
-		//			y[i * (n + 1) + j] = u0;
-		//		}
-		//		else
-		//		{
-		//			y[i * (n + 1) + j] = yy[(i - 1) * (n - 1) + j - 1];
-		//		}
-		//	}
-		//}
 	}
 
 	void CoefficientsTrapezoidal(double a1, double b1, double a2, double b2, int n, double u0, double kai, DMatX& A, DVecX& b)
@@ -182,28 +193,44 @@ private: // Class Function
 				double h12 = h1 * h1;
 				double h22 = h2 * h2;
 
-				if (i > 1)
+				if (i > 0)
 				{
-					A[index][(i - 1) * c + j] = a1m / h12;
+					if (i > 1)
+					{
+						A[index][(i - 1) * c + j] = a1m / h12;
+					}
+					
 					A[index][i * c + j] -= a1m / h12;
 				}
-				if (i < c - 2)
+				if (i < c - 1)
 				{
-					A[index][(i + 1) * c + j] = a1p / h12;
+					if (i < c - 2)
+					{
+						A[index][(i + 1) * c + j] = a1p / h12;
+					}
+					
 					A[index][i * c + j] -= a1p / h12;
 				}
-				if (j > 1)
+				if (j > 0)
 				{
-					A[index][i * c + j - 1] = a2m / h22;
+					if (j > 1)
+					{
+						A[index][i * c + j - 1] = a2m / h22;
+					}
+					
 					A[index][i * c + j] -= a2m / h22;
 				}
-				if (j < c - 2)
+				if (j < c - 1)
 				{
-					A[index][i * c + j + 1] = a2p / h22;
+					if (j < c - 2)
+					{
+						A[index][i * c + j + 1] = a2p / h22;
+					}
+					
 					A[index][i * c + j] -= a2p / h22;
 				}
 
-				b[index] = F(x1m, x2m);
+				b[index] = -F(x1m, x2m);
 			}
 		}
 
@@ -298,12 +325,12 @@ private: // Static Function
 
 		double alpha = 1.0;
 
-		//DMatX S = DMatX(1.0, n, n) - B_inv * A;
+		DMatX S = DMatX(1.0, n, n) - B_inv * A;
 
 		while (r > r0 * FLT_EPSILON)
 		{
-			x = ConjugateGradientNextX(A, x, b, B, B_inv, preX, rr, w, tau, alpha);
-			//x = SeidelNextX(x, B_inv, S, b);
+			//x = ConjugateGradientNextX(A, x, b, B, B_inv, preX, rr, w, tau, alpha);
+			x = SeidelNextX(x, B_inv, S, b);
 
 			r = Norm(A * x - b);
 
@@ -341,20 +368,28 @@ private: // Data Field
 	DVecX mX1;
 	DVecX mX2;
 	DVecX mY;
+	DVecX mX1c;
+	DVecX mX2c;
+	DVecX mYc;
 	DVecX mX1s[3];
 	DVecX mX2s[3];
 	DVecX mYs[3];
-	std::vector<double> mIterationCounts;
-	std::vector<double> mResiduals;
+	
+	std::vector<double> mIterationCounts[3];
+	std::vector<double> mResiduals[3];
 
 private: // State Field
 	bool mComplete = true;
+	bool mCompletes[3] = { true, true, true };
+	bool mCalculate = false;
+	bool mShowCalculate = false;
+	bool mShowResiduals = false;
 
 public: // Register Function
 	REGISTER_FUNC(createFunc, castFunc)
 	{
 		Registry::RegisterClassDe("H10_1_P05", createFunc, castFunc, "Project")
-			.RegisterField("n", &H10_1_P05::n, "int", "Range(10,500)")
+			.RegisterField("n", &H10_1_P05::n, "int", "Range(10,30)")
 			.RegisterField("kai", &H10_1_P05::kai, "double", "Range(0.01,100.0)");
 	}
 };  RCLASS_END(H10_1_P05)

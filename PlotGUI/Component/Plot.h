@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <functional>
 
+#include <cmath>
+
 namespace PlotGUI
 {
 	struct PlotDescriptor
@@ -197,11 +199,34 @@ namespace PlotGUI
 
 		template <typename T>
 		static void Plot3(
-			const std::string& title,
+			const std::string& title, const std::string& xLabel, const std::string& yLabel, 
 			const T* x1, const T* y1, int count1, const std::string& name1,
 			const T* x2, const T* y2, int count2, const std::string& name2,
 			const T* x3, const T* y3, int count3, const std::string& name3,
-			const PlotDescriptor& desc);
+			const PlotDescriptor& desc)
+		{
+			if (!NeedShow())
+			{
+				return;
+			}
+
+			std::string t = title;
+			if (!desc.showTitle)
+			{
+				t = std::string("##") + title;
+			}
+
+			if (ImPlot::BeginPlot(t.c_str(), { -1, -1 }))
+			{
+				ImPlot::SetupAxes(xLabel.c_str(), yLabel.c_str(), desc.axisFlags, desc.axisFlags);
+
+				ImPlot::PlotLine(name1.c_str(), x1, y1, count1, desc.lineFlags);
+				ImPlot::PlotLine(name2.c_str(), x2, y2, count2, desc.lineFlags);
+				ImPlot::PlotLine(name3.c_str(), x3, y3, count3, desc.lineFlags);
+
+				ImPlot::EndPlot();
+			}
+		}
 
 		template <typename T>
 		static void Plot3G(
@@ -520,8 +545,8 @@ namespace PlotGUI
 				t = std::string("##") + title;
 			}
 
-			int min = 0.0;
-			int max = 1.0;
+			double min = 0.0;
+			double max = 1.0;
 
 			ImPlot::PushColormap(ImPlotColormap_Viridis);
 			if (ImPlot::BeginPlot(t.c_str(), { ImGui::GetContentRegionAvail().x - 150.0f - ImGui::GetStyle().ItemSpacing.x, -1 }, desc.plotFlags))
@@ -535,6 +560,89 @@ namespace PlotGUI
 					max = *std::max_element(data, data + rows * cols);
 
 					ImPlot::PlotHeatmap(name.c_str(), data, rows, cols, min, max, NULL, ImPlotPoint(limits.xMin, limits.yMin), ImPlotPoint(limits.xMax, limits.yMax));
+				}
+
+				ImPlot::EndPlot();
+			}
+			ImGui::SameLine();
+			ImPlot::ColormapScale("Count", min, max, { 150, -1 }, "%g", ImPlotColormapScaleFlags_Opposite);
+			ImPlot::PopColormap();
+		}
+
+		template <typename T>
+		static void PlotColorMap2DL(
+			const std::string& title, const std::string& xLabel, const std::string& yLabel,
+			const T* data, int rows, int cols, int drawRows, int drawCols, const std::string& name,
+			const PlotDescriptor& desc, const AxesLimits& limits)
+		{
+			if (!NeedShow())
+			{
+				return;
+			}
+
+			std::string t = title;
+			if (!desc.showTitle)
+			{
+				t = std::string("##") + title;
+			}
+
+			double min = 0.0;
+			double max = 1.0;
+
+			ImPlot::PushColormap(ImPlotColormap_Viridis);
+			if (ImPlot::BeginPlot(t.c_str(), { ImGui::GetContentRegionAvail().x - 150.0f - ImGui::GetStyle().ItemSpacing.x, -1 }, desc.plotFlags))
+			{
+				ImPlot::SetupAxes(xLabel.c_str(), yLabel.c_str(), desc.axisFlags, desc.axisFlags);
+				//ImPlot::SetupAxesLimits(limits.xMin, limits.xMax, limits.yMin, limits.yMax);
+
+				if (rows * cols > 3)
+				{
+					std::vector<double> dat(rows * cols);
+
+					for (int i = 0; i < rows / 2 + 1; ++i)
+					{
+						for (int j = 0; j < rows; ++j)
+						{
+							dat[i * rows + j] = data[(rows - 1 - i) * rows + j];
+							dat[(rows - 1 - i) * rows + j] = data[i * rows + j];
+						}
+					}
+
+					double rateR = static_cast<double>(rows - 1) / drawRows;
+					double rateC = static_cast<double>(cols - 1) / drawCols;
+
+					std::vector<double> plotData(drawRows * drawCols, 0.0);
+
+					auto lerp = [](double a, double b, double t) { return a * (1.0 - t) + b * t; };
+
+					for (int i = 0; i < drawRows; ++i)
+					{
+						for (int j = 0; j < drawCols; ++j)
+						{
+							int index = i * drawCols + j;
+
+							double ii = i + 0.5;
+							double jj = j + 0.5;
+
+							int sx1 = static_cast<int>(std::floor(ii * rateR));
+							int sy1 = static_cast<int>(std::floor(jj * rateC));
+							int sx2 = std::min(sx1 + 1, rows - 1);
+							int sy2 = std::min(sy1 + 1, cols - 1);
+
+							double lx = ii * rateR - sx1;
+							double ly = jj * rateC - sy1;
+
+							plotData[index] = lerp(
+								lerp(dat[sy1 * rows + sx1], dat[sy1 * rows + sx2], lx),
+								lerp(dat[sy2 * rows + sx1], dat[sy2 * rows + sx2], lx),
+								ly);
+						}
+					}
+
+					min = *std::min_element(plotData.begin(), plotData.end());
+					max = *std::max_element(plotData.begin(), plotData.end());
+
+					ImPlot::PlotHeatmap(name.c_str(), plotData.data(), drawRows, drawCols, min, max, NULL, ImPlotPoint(limits.xMin, limits.yMin), ImPlotPoint(limits.xMax, limits.yMax));
 				}
 
 				ImPlot::EndPlot();
